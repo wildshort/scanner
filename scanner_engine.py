@@ -49,6 +49,36 @@ def _stoch(h: pd.Series, l: pd.Series, c: pd.Series, k=14, d=3):
     kp = 100 * (c - lo) / (hi - lo + 1e-9)
     return kp, kp.rolling(d).mean()
 
+def _vwap(df: pd.DataFrame) -> pd.Series:
+    tp = (df['high'] + df['low'] + df['close']) / 3
+    return (tp * df['volume']).cumsum() / (df['volume'].cumsum() + 1e-9)
+
+
+def _pivot_points(ph: float, pl: float, pc: float) -> dict:
+    pp = (ph + pl + pc) / 3
+    return {
+        'pp': round(pp, 2),
+        'r1': round(2*pp - pl, 2), 'r2': round(pp + ph - pl, 2), 'r3': round(2*pp + ph - 2*pl, 2),
+        's1': round(2*pp - ph, 2), 's2': round(pp - ph + pl, 2), 's3': round(2*pp - 2*ph + pl, 2),
+    }
+
+
+def _nifty_returns() -> dict:
+    try:
+        import yfinance as yf
+        df = yf.download('^NSEI', period='2mo', auto_adjust=True, progress=False)
+        c  = df['Close'].dropna()
+        if len(c) < 6:
+            return {}
+        return {
+            '1d':  float((c.iloc[-1] - c.iloc[-2]) / c.iloc[-2] * 100),
+            '5d':  float((c.iloc[-1] - c.iloc[-6]) / c.iloc[-6] * 100) if len(c) >= 6 else 0,
+            '20d': float((c.iloc[-1] - c.iloc[-21]) / c.iloc[-21] * 100) if len(c) >= 21 else 0,
+        }
+    except Exception:
+        return {}
+
+
 def _supertrend(high, low, close, period: int = 10, multiplier: float = 3.0):
     """Returns (values, direction) as numpy arrays. direction: 1=bull, -1=bear."""
     n = len(close)
@@ -162,10 +192,16 @@ def analyze_symbol(symbol: str, include_chart: bool = True) -> dict | None:
         in_bb_upper    = bool(price > float(bb_mid.iloc[-1]))
         ha_bullish     = bool(float(ha['close'].iloc[-1]) > float(ha['open'].iloc[-1]))
 
-        change_pct = round((price - prev_close) / prev_close * 100, 2)
+        change_pct  = round((price - prev_close) / prev_close * 100, 2)
+        change_5d   = round((price - float(close.iloc[-6]))  / float(close.iloc[-6])  * 100, 2) if len(close) >= 6  else 0.0
+        change_20d  = round((price - float(close.iloc[-21])) / float(close.iloc[-21]) * 100, 2) if len(close) >= 21 else 0.0
         st_bull    = bool(int(st_dirs[-1]) == 1)
         st_crossed = len(st_dirs) > 1 and int(st_dirs[-1]) != int(st_dirs[-2])
         st_val     = round(float(st_vals[-1]), 2)
+
+        # Pivot points from previous session
+        prev_bar = df.iloc[-2]
+        pivots   = _pivot_points(float(prev_bar['high']), float(prev_bar['low']), float(prev_bar['close']))
 
         # Fundamentals
         pe = mktcap = None
@@ -220,6 +256,9 @@ def analyze_symbol(symbol: str, include_chart: bool = True) -> dict | None:
             "st_bull":       st_bull,
             "st_crossed":    st_crossed,
             "st_val":        st_val,
+            "change_5d":     change_5d,
+            "change_20d":    change_20d,
+            "pivots":        pivots,
         }
         row["score"] = _score(row)
 
@@ -336,9 +375,12 @@ def fetch_chart_data(symbol: str, interval: str) -> dict | None:
         sk, sd             = _stoch(high, low, close)
         st_v, st_d         = _supertrend(high.values, low.values, close.values)
 
+        intraday_intervals = {"5m","10m","15m","30m","1h"}
+        vwap_s = _vwap(df) if interval in intraday_intervals else None
+
         ohlc = []
         for i, (idx, r) in enumerate(df.iterrows()):
-            ohlc.append({
+            candle = {
                 "time":      int(pd.Timestamp(idx).timestamp()),
                 "open":      _f(r['open']),
                 "high":      _f(r['high']),
@@ -361,7 +403,10 @@ def fetch_chart_data(symbol: str, interval: str) -> dict | None:
                 "stoch_d":   _f(sd.iloc[i]),
                 "st":        _f(st_v[i]),
                 "st_dir":    int(st_d[i]),
-            })
+            }
+            if vwap_s is not None:
+                candle["vwap"] = _f(vwap_s.iloc[i])
+            ohlc.append(candle)
         return {"symbol": symbol, "interval": interval, "ohlc": ohlc}
     except Exception as e:
         logger.warning(f"fetch_chart_data failed [{symbol}/{interval}]: {e}")
@@ -370,6 +415,9 @@ def fetch_chart_data(symbol: str, interval: str) -> dict | None:
 
 def run_scan(market: str = "nifty50", max_workers: int = 8) -> dict:
     symbols = MARKETS.get(market, MARKETS["nifty50"])["symbols"]
+
+    # Fetch Nifty returns once for RS calculation
+    nifty_ret = _nifty_returns()
 
     # Batch live quotes first (fast single call)
     live_quotes = kite_data.get_live_quotes(symbols) if kite_data.is_live() else {}
@@ -390,6 +438,13 @@ def run_scan(market: str = "nifty50", max_workers: int = 8) -> dict:
                         r["change_pct"] = q["change_pct"]
                     r["volume"] = q["volume"]
                     r["oi"]     = q.get("oi", 0)
+
+                # RS vs Nifty
+                if nifty_ret:
+                    r["rs_1d"]  = round(r.get("change_pct", 0) - nifty_ret.get("1d",  0), 2)
+                    r["rs_5d"]  = round(r.get("change_5d",  0) - nifty_ret.get("5d",  0), 2)
+                    r["rs_20d"] = round(r.get("change_20d", 0) - nifty_ret.get("20d", 0), 2)
+
                 results.append(r)
 
     results.sort(key=lambda x: x["score"], reverse=True)
@@ -397,9 +452,23 @@ def run_scan(market: str = "nifty50", max_workers: int = 8) -> dict:
     # Sector aggregation
     sectors = _aggregate_sectors(results)
 
+    # Market breadth
+    above_ema50 = sum(1 for r in results if r.get("above_ema50"))
+    adv = sum(1 for r in results if r.get("change_pct", 0) > 0)
+    dec = sum(1 for r in results if r.get("change_pct", 0) < 0)
+    highs_52w = sum(1 for r in results if r.get("from_52w_high", -99) >= -2)
+    breadth = {
+        "pct_above_ema50": round(above_ema50 / len(results) * 100, 1) if results else 0,
+        "adv_dec_ratio":   round(adv / (dec + 1), 2),
+        "advances":        adv,
+        "declines":        dec,
+        "new_52w_highs":   highs_52w,
+    }
+
     return {
         "results":  results,
         "sectors":  sectors,
+        "breadth":  breadth,
         "source":   kite_data.get_status(),
         "total":    len(results),
     }

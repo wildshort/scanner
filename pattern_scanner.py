@@ -432,3 +432,174 @@ def run_setups_scan(market: str = 'nifty50', max_workers: int = 8) -> dict:
         'candle_bear':    [r for r in all_r if any(p in r['candle_patterns'] for p in bear_candle_keys)],
         'classical':      [r for r in all_r if r['classical_patterns']],
     }
+
+
+# ── Intraday Scanner ───────────────────────────────────────────────────────────
+
+def _analyze_intraday(symbol: str, interval: str) -> dict | None:
+    """Single-symbol intraday analysis: VWAP, RSI, BB squeeze, opening range."""
+    try:
+        import kite_data
+        df = kite_data.get_ohlcv_interval(symbol, interval)
+        if df is None or len(df) < 20:
+            return None
+        df.columns = [c.lower() for c in df.columns]
+        close = df['close']; high = df['high']; low = df['low']; vol = df['volume']
+
+        # VWAP
+        tp = (high + low + close) / 3
+        vwap = float((tp * vol).cumsum().iloc[-1] / (vol.cumsum().iloc[-1] + 1e-9))
+
+        # RSI, BB
+        rsi_s = _rsi_s(close)
+        bb_u, bb_m, bb_l = _bb_s(close)
+        price = float(close.iloc[-1])
+        rsi_v = float(rsi_s.iloc[-1])
+        bb_pct = (price - float(bb_l.iloc[-1])) / (float(bb_u.iloc[-1]) - float(bb_l.iloc[-1]) + 1e-9)
+
+        # Opening range (first 15 bars)
+        or_high = float(high.iloc[:15].max())
+        or_low  = float(low.iloc[:15].min())
+        or_break_up   = price > or_high
+        or_break_down = price < or_low
+
+        # VWAP signals
+        above_vwap = price > vwap
+        prev_above  = float(close.iloc[-2]) > float(((high.iloc[:-1] + low.iloc[:-1] + close.iloc[:-1]) / 3 * vol.iloc[:-1]).cumsum().iloc[-1] / (vol.iloc[:-1].cumsum().iloc[-1] + 1e-9))
+        vwap_cross_up   = above_vwap and float(close.iloc[-2]) < vwap
+        vwap_cross_down = not above_vwap and float(close.iloc[-2]) > vwap
+
+        # Volume surge
+        vol20 = float(vol.rolling(20).mean().iloc[-1])
+        vol_ratio = float(vol.iloc[-1]) / (vol20 + 1e-9)
+
+        from universe import get_meta
+        meta = get_meta(symbol)
+        chg  = round((price - float(close.iloc[-2])) / float(close.iloc[-2]) * 100, 2) if len(close) >= 2 else 0.0
+
+        return {
+            'symbol': symbol, 'name': meta['name'], 'sector': meta['sector'],
+            'price': round(price, 2), 'change_pct': chg,
+            'rsi': round(rsi_v, 1),
+            'vwap': round(vwap, 2), 'above_vwap': above_vwap,
+            'vwap_cross_up': vwap_cross_up, 'vwap_cross_down': vwap_cross_down,
+            'bb_pct': round(bb_pct * 100, 1),
+            'vol_ratio': round(vol_ratio, 2),
+            'or_high': round(or_high, 2), 'or_low': round(or_low, 2),
+            'or_break_up': or_break_up, 'or_break_down': or_break_down,
+        }
+    except Exception as e:
+        logger.warning(f"intraday scan failed [{symbol}]: {e}")
+        return None
+
+
+def _rsi_s(s: pd.Series, n=14) -> pd.Series:
+    d = s.diff(); g = d.clip(lower=0); l = -d.clip(upper=0)
+    ag = g.ewm(alpha=1/n, min_periods=n, adjust=False).mean()
+    al = l.ewm(alpha=1/n, min_periods=n, adjust=False).mean()
+    return 100 - 100 / (1 + ag / al)
+
+
+def _bb_s(s: pd.Series, n=20, k=2.0):
+    m = s.rolling(n).mean(); sd = s.rolling(n).std()
+    return m + k*sd, m, m - k*sd
+
+
+def run_intraday_scan(market: str = 'nifty50', interval: str = '15m', max_workers: int = 8) -> dict:
+    from universe import MARKETS
+    symbols = MARKETS.get(market, MARKETS['nifty50'])['symbols']
+    all_r: list[dict] = []
+    with ThreadPoolExecutor(max_workers=max_workers) as ex:
+        futs = {ex.submit(_analyze_intraday, s, interval): s for s in symbols}
+        for f in as_completed(futs):
+            r = f.result()
+            if r:
+                all_r.append(r)
+
+    return {
+        'interval': interval,
+        'or_break_up':    sorted([r for r in all_r if r['or_break_up']],    key=lambda x: x['vol_ratio'], reverse=True),
+        'or_break_down':  sorted([r for r in all_r if r['or_break_down']],  key=lambda x: x['vol_ratio'], reverse=True),
+        'vwap_cross_up':  sorted([r for r in all_r if r['vwap_cross_up']],  key=lambda x: x['change_pct'], reverse=True),
+        'vwap_cross_down':[r for r in all_r if r['vwap_cross_down']],
+        'above_vwap_surge':[r for r in all_r if r['above_vwap'] and r['vol_ratio'] >= 2],
+        'rsi_overbought': [r for r in all_r if r['rsi'] >= 70],
+        'rsi_oversold':   [r for r in all_r if r['rsi'] <= 30],
+        'all':            sorted(all_r, key=lambda x: x['change_pct'], reverse=True),
+    }
+
+
+# ── MTF Confluence Scanner ─────────────────────────────────────────────────────
+
+def _analyze_confluence(symbol: str) -> dict | None:
+    """Check if daily + weekly + monthly all align bullishly or bearishly."""
+    try:
+        import kite_data
+        results = {}
+        for tf, days in [('1d', 400), ('1wk', 400), ('1mo', 400)]:
+            df = kite_data.get_ohlcv_interval(symbol, tf)
+            if df is None or len(df) < 30:
+                continue
+            df.columns = [c.lower() for c in df.columns]
+            close = df['close']; high = df['high']; low = df['low']
+            rsi_v = float(_rsi_s(close).iloc[-1])
+            ema20 = float(close.ewm(span=20, adjust=False).mean().iloc[-1])
+            ema50 = float(close.ewm(span=50, adjust=False).mean().iloc[-1])
+            price = float(close.iloc[-1])
+            st_v, st_d = _supertrend_np(high.values, low.values, close.values)
+            results[tf] = {
+                'price': round(price, 2),
+                'above_ema20': price > ema20,
+                'above_ema50': price > ema50,
+                'st_bull': int(st_d[-1]) == 1,
+                'rsi': round(rsi_v, 1),
+                'bull': price > ema20 and price > ema50 and int(st_d[-1]) == 1,
+                'bear': price < ema20 and price < ema50 and int(st_d[-1]) == -1,
+            }
+
+        if not results:
+            return None
+
+        bull_count = sum(1 for tf in results if results[tf].get('bull'))
+        bear_count = sum(1 for tf in results if results[tf].get('bear'))
+        confluence = 'strong_bull' if bull_count == 3 else \
+                     'bull' if bull_count == 2 else \
+                     'strong_bear' if bear_count == 3 else \
+                     'bear' if bear_count == 2 else 'neutral'
+
+        from universe import get_meta
+        meta = get_meta(symbol)
+        price_daily = results.get('1d', {}).get('price', 0)
+
+        return {
+            'symbol': symbol, 'name': meta['name'], 'sector': meta['sector'],
+            'price': price_daily,
+            'confluence': confluence,
+            'bull_count': bull_count,
+            'bear_count': bear_count,
+            'timeframes': results,
+        }
+    except Exception as e:
+        logger.warning(f"confluence scan failed [{symbol}]: {e}")
+        return None
+
+
+def run_confluence_scan(market: str = 'nifty50', max_workers: int = 6) -> dict:
+    from universe import MARKETS
+    symbols = MARKETS.get(market, MARKETS['nifty50'])['symbols']
+    all_r: list[dict] = []
+    with ThreadPoolExecutor(max_workers=max_workers) as ex:
+        futs = {ex.submit(_analyze_confluence, s): s for s in symbols}
+        for f in as_completed(futs):
+            r = f.result()
+            if r:
+                all_r.append(r)
+
+    return {
+        'strong_bull': sorted([r for r in all_r if r['confluence'] == 'strong_bull'], key=lambda x: x['bull_count'], reverse=True),
+        'bull':        sorted([r for r in all_r if r['confluence'] == 'bull'],        key=lambda x: x['bull_count'], reverse=True),
+        'strong_bear': sorted([r for r in all_r if r['confluence'] == 'strong_bear'], key=lambda x: x['bear_count'], reverse=True),
+        'bear':        sorted([r for r in all_r if r['confluence'] == 'bear'],        key=lambda x: x['bear_count'], reverse=True),
+        'neutral':     [r for r in all_r if r['confluence'] == 'neutral'],
+        'all':         sorted(all_r, key=lambda x: (x['bull_count'] - x['bear_count']), reverse=True),
+    }

@@ -244,6 +244,53 @@ td{padding:8px 11px;white-space:nowrap}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
+/* ── Breadth bar ── */
+.breadth-bar{display:flex;gap:20px;padding:8px 18px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;font-size:11px}
+.bv{font-weight:700;font-family:'SF Mono',monospace;font-size:13px}
+
+/* ── Watchlist star ── */
+.wl-star{background:none;border:none;cursor:pointer;padding:0 3px;font-size:13px;color:var(--text3);line-height:1}
+.wl-star.on{color:var(--yellow)}
+
+/* ── Export CSV ── */
+.export-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:3px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-weight:700}
+.export-btn:hover{color:var(--text)}
+
+/* ── Alert modal ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:20px;min-width:360px;max-width:440px;width:100%}
+.modal h3{font-size:14px;font-weight:800;margin-bottom:14px}
+.modal-row{display:flex;gap:8px;margin-bottom:10px}
+.modal-row label{font-size:10px;color:var(--text3);display:block;margin-bottom:3px}
+.alert-list{margin-top:12px;display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto}
+.alert-item{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:7px 10px;font-size:11px}
+.alert-item .adel{background:var(--red2);border:none;color:var(--red);cursor:pointer;border-radius:3px;padding:2px 6px;font-size:10px;flex-shrink:0}
+.alert-sym{font-weight:700;color:var(--blue);min-width:70px}
+.alert-cond{font-size:10px;color:var(--text2);flex:1}
+
+/* ── Intraday tab ── */
+.intra-controls{display:flex;gap:8px;padding:10px 18px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;align-items:center}
+.intra-controls select{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:4px;font-size:11px}
+
+/* ── Confluence tab ── */
+.conf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:14px}
+.conf-card{background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:11px;cursor:pointer;transition:border-color .15s}
+.conf-card:hover{border-color:var(--text2)}
+.conf-card.strong-bull{border-left:4px solid var(--green)}
+.conf-card.bull{border-left:4px solid rgba(63,185,80,.5)}
+.conf-card.strong-bear{border-left:4px solid var(--red)}
+.conf-card.bear{border-left:4px solid rgba(248,81,73,.5)}
+.conf-card.neutral{border-left:4px solid var(--border)}
+.tf-row{display:flex;gap:5px;margin-top:7px}
+.tf-pill{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700}
+.tf-pill.bull{background:rgba(63,185,80,.2);color:var(--green)}
+.tf-pill.bear{background:rgba(248,81,73,.2);color:var(--red)}
+.tf-pill.neu{background:var(--bg3);color:var(--text3)}
+
+/* ── Pivot overlay button ── */
+.ov-active-grp{border-color:var(--yellow);color:var(--yellow)}
+
 /* ── Setups tab ── */
 .setup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;margin-bottom:14px}
 .setup-section{background:var(--bg2);border:1px solid var(--border);border-radius:7px;overflow:hidden}
@@ -343,6 +390,9 @@ td{padding:8px 11px;white-space:nowrap}
     <div class="tab" onclick="switchTab('sectors')">Sectors</div>
     <div class="tab" onclick="switchTab('fiidii')">FII / DII</div>
     <div class="tab" onclick="switchTab('setups')" id="tab-setups">Setups <span class="tab-badge" id="setupsBadge">–</span></div>
+    <div class="tab" onclick="switchTab('intraday')" id="tab-intraday">Intraday</div>
+    <div class="tab" onclick="switchTab('confluence')" id="tab-confluence">MTF Confluence</div>
+    <div class="tab" onclick="switchTab('watchlist')" id="tab-watchlist">Watchlist <span class="tab-badge" id="wlBadge">0</span></div>
   </div>
 
   <!-- ── Scan Tab ── -->
@@ -353,6 +403,16 @@ td{padding:8px 11px;white-space:nowrap}
       <div><div class="sv green" id="stTop">–</div><div class="sl2">Leaders</div></div>
       <div><div class="sv red" id="stLose">–</div><div class="sl2">Losers</div></div>
       <div><div class="sv yellow" id="stBull">–</div><div class="sl2">Bullish</div></div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <button class="export-btn" onclick="exportCSV()">⬇ CSV</button>
+      </div>
+    </div>
+    <div class="breadth-bar" id="breadthBar" style="display:none">
+      <div><span class="bv green" id="brAbove50">–</span><span style="font-size:10px;color:var(--text3);margin-left:4px">% Above EMA50</span></div>
+      <div><span class="bv blue" id="brAdv">–</span><span style="font-size:10px;color:var(--text3);margin-left:4px">Advances</span></div>
+      <div><span class="bv red" id="brDec">–</span><span style="font-size:10px;color:var(--text3);margin-left:4px">Declines</span></div>
+      <div><span class="bv yellow" id="brADR">–</span><span style="font-size:10px;color:var(--text3);margin-left:4px">A/D Ratio</span></div>
+      <div><span class="bv green" id="brHighs">–</span><span style="font-size:10px;color:var(--text3);margin-left:4px">Near 52W High</span></div>
     </div>
     <div class="content" id="scanContent">
     </div>
@@ -422,6 +482,65 @@ td{padding:8px 11px;white-space:nowrap}
     </div>
   </div>
 
+  <!-- ── Intraday Scanner Tab ── -->
+  <div class="tab-panel" id="panel-intraday">
+    <div class="intra-controls">
+      <span style="font-size:11px;color:var(--text2);font-weight:700">Interval:</span>
+      <select id="intradayInterval" onchange="">
+        <option value="15m">15 min</option>
+        <option value="5m">5 min</option>
+        <option value="10m">10 min</option>
+        <option value="30m">30 min</option>
+        <option value="1h">1 Hour</option>
+      </select>
+      <button class="btn btn-blue" style="padding:5px 14px;font-size:11px" onclick="startIntradayScan(true)">Scan Intraday</button>
+      <span style="font-size:10px;color:var(--text3);margin-left:4px">OR breakout · VWAP cross · RSI extreme · Volume surge</span>
+    </div>
+    <div style="flex:1;overflow-y:auto" id="intradayContent">
+      <div class="loading" style="color:var(--text3)">
+        <div style="font-size:28px">⚡</div>
+        <div>Click <strong>Scan Intraday</strong> for live intraday setups</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">Opening Range · VWAP · RSI · Volume</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MTF Confluence Tab ── -->
+  <div class="tab-panel" id="panel-confluence">
+    <div class="stats" style="padding:10px 18px">
+      <div><div class="sv green" id="confStrongBull">–</div><div class="sl2">Strong Bull (3/3)</div></div>
+      <div><div class="sv" id="confBull">–</div><div class="sl2">Bull (2/3)</div></div>
+      <div><div class="sv red" id="confStrongBear">–</div><div class="sl2">Strong Bear (3/3)</div></div>
+      <div><div class="sv" id="confBear">–</div><div class="sl2">Bear (2/3)</div></div>
+      <div style="margin-left:auto">
+        <button class="btn btn-blue" style="padding:5px 14px;font-size:11px" onclick="startConfluenceScan(true)">Scan Confluence</button>
+      </div>
+    </div>
+    <div class="content" id="confluenceContent">
+      <div class="loading" style="color:var(--text3)">
+        <div style="font-size:28px">🔀</div>
+        <div>Click <strong>Scan Confluence</strong> to check Daily + Weekly + Monthly alignment</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Watchlist Tab ── -->
+  <div class="tab-panel" id="panel-watchlist">
+    <div class="stats" style="padding:10px 18px">
+      <div><div class="sv blue" id="wlCount">0</div><div class="sl2">Stocks</div></div>
+      <div style="margin-left:auto">
+        <button class="export-btn" onclick="exportWatchlistCSV()" style="margin-right:8px">⬇ CSV</button>
+        <button class="btn-sm btn" onclick="clearWatchlist()" style="padding:5px 12px;font-size:11px">Clear All</button>
+      </div>
+    </div>
+    <div class="content" id="watchlistContent">
+      <div class="loading" style="color:var(--text3)">
+        <div style="font-size:28px">⭐</div>
+        <div>Star stocks in the Scan tab to add them here</div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── FII/DII Tab ── -->
   <div class="tab-panel" id="panel-fiidii">
     <div class="content" id="fiidiiContent">
@@ -467,6 +586,13 @@ td{padding:8px 11px;white-space:nowrap}
         <button class="ov-btn" id="ind-S" onclick="setIndMode('S',this)" title="MACD + Stochastic + RSI(60/40)">S</button>
       </div>
       <span style="color:var(--border)">│</span>
+      <!-- Overlay toggles: Pivot, Fib, VWAP -->
+      <div class="overlay-btns" title="Overlays">
+        <button class="ov-btn" id="ov-pivot" onclick="togPivot(this)" title="Pivot Points (PP/R1/R2/S1/S2)">PP</button>
+        <button class="ov-btn" id="ov-fib" onclick="togFib(this)" title="Fibonacci Retracement (52W)">Fib</button>
+        <button class="ov-btn" id="ov-vwap" onclick="togVwap(this)" title="VWAP (intraday only)">VWAP</button>
+      </div>
+      <span style="color:var(--border)">│</span>
       <!-- Drawing tools -->
       <div class="overlay-btns" title="Drawing Tools">
         <button class="ov-btn active" id="dt-cursor" onclick="setDrawMode('cursor',this)" title="Cursor">↖</button>
@@ -475,6 +601,11 @@ td{padding:8px 11px;white-space:nowrap}
         <button class="ov-btn" id="dt-clear" onclick="clearDrawings()" title="Clear Drawings">⌫</button>
       </div>
       <span style="color:var(--border)">│</span>
+      <!-- Alert button -->
+      <button class="ov-btn" id="panelAlertBtn" onclick="openAlertModal()" title="Set Price Alert">🔔</button>
+      <span style="color:var(--border)">│</span>
+      <!-- Watchlist star -->
+      <button class="wl-star" id="panelWlStar" onclick="toggleWatchlistFromPanel()" title="Add to Watchlist">☆</button>
       <button class="p-close" onclick="closePanel()">✕</button>
     </div>
   </div>
@@ -523,6 +654,10 @@ let scanInProgress=false, autoTimer=null;
 let currentTl='1y', indMode=null, currentBarCount=0;
 let chartInstances=[];
 let drawMode='cursor', drawings=[], tlClickPts=[], pMainChart=null, pMainSeries=null;
+let showPivot=false, showFib=false, showVwap=false;
+let pivotLines=[], fibLines=[], vwapLine=null;
+let watchlist = JSON.parse(localStorage.getItem('asta-watchlist') || '[]');
+let intradayData=null, confluenceData=null;
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 async function init() {
@@ -556,6 +691,9 @@ function switchTab(t) {
   if(t==='momentum') startMomentumScan(false);
   if(t==='fiidii') loadFiiDii();
   if(t==='setups'&&setupsData) renderSetups(setupsData);
+  if(t==='watchlist') renderWatchlist();
+  if(t==='intraday') startIntradayScan(false);
+  if(t==='confluence') startConfluenceScan(false);
 }
 
 // ── Scan ───────────────────────────────────────────────────────────────────────
@@ -592,6 +730,7 @@ async function startScan(force=true) {
     applyFilters();
     if(sectors.length) renderSectors(sectors);
     if(scanData._tl) renderTrendlines(scanData._tl);
+    if(data.breadth) renderBreadth(data.breadth);
 
     const ts=new Date(data.scanned_at*1000).toLocaleTimeString();
     setStatus('live',data.cached?'Cached':'Live');
@@ -610,11 +749,14 @@ async function clearCache(){
     await fetch('/api/cache/clear');
     // Reset ALL client state
     allResults=[]; filtered=[]; scanData=null; sectors=[];
-    momData=null; setupsData=null;
+    momData=null; setupsData=null; intradayData=null; confluenceData=null;
     renderScanContent([]);
+    document.getElementById('breadthBar').style.display='none';
     document.getElementById('tlContent').innerHTML='<div class="loading" style="color:var(--text3)"><div>Cache cleared — run a scan to refresh</div></div>';
     document.getElementById('momContent').innerHTML='<div class="loading" style="color:var(--text3)"><div>Cache cleared — click Scan Momentum</div></div>';
     document.getElementById('setupsContent').innerHTML='<div class="loading" style="color:var(--text3)"><div>Cache cleared — click Scan Setups</div></div>';
+    document.getElementById('intradayContent').innerHTML='<div class="loading" style="color:var(--text3)"><div>Cache cleared — click Scan Intraday</div></div>';
+    document.getElementById('confluenceContent').innerHTML='<div class="loading" style="color:var(--text3)"><div>Cache cleared — click Scan Confluence</div></div>';
     document.getElementById('tlBreakouts').textContent='–';
     document.getElementById('tlBreakdowns').textContent='–';
     document.getElementById('tlPullbacks').textContent='–';
@@ -691,11 +833,14 @@ function renderScanContent(rows) {
 function buildTable(rows,isTop,mode='') {
   if(!rows.length)return'<div style="padding:20px;text-align:center;color:var(--text3)">No stocks</div>';
   const head=`<thead><tr>
+    <th></th>
     <th>#</th>
     <th onclick="sb('symbol')" class="${sortCol==='symbol'?'sorted':''}">Ticker</th>
     <th>Sector</th>
     <th onclick="sb('price')" class="${sortCol==='price'?'sorted':''}">Price ⇅</th>
-    <th onclick="sb('change_pct')" class="${sortCol==='change_pct'?'sorted':''}">Chg% ⇅</th>
+    <th onclick="sb('change_pct')" class="${sortCol==='change_pct'?'sorted':''}">Day% ⇅</th>
+    <th onclick="sb('change_5d')" class="${sortCol==='change_5d'?'sorted':''}" title="5-Day Change">5D% ⇅</th>
+    <th onclick="sb('rs_1d')" class="${sortCol==='rs_1d'?'sorted':''}" title="Relative Strength vs Nifty">RS ⇅</th>
     <th onclick="sb('pe')" class="${sortCol==='pe'?'sorted':''}">P/E ⇅</th>
     <th onclick="sb('vol_ratio')" class="${sortCol==='vol_ratio'?'sorted':''}">Vol ⇅</th>
     <th onclick="sb('rsi')" class="${sortCol==='rsi'?'sorted':''}">RSI ⇅</th>
@@ -704,13 +849,22 @@ function buildTable(rows,isTop,mode='') {
     <th>Sigs</th>
     <th onclick="sb('score')" class="${sortCol==='score'?'sorted':''}">Score ⇅</th>
   </tr></thead>`;
-  const body='<tbody>'+rows.map((r,i)=>`
+  const body='<tbody>'+rows.map((r,i)=>{
+    const inWl = watchlist.includes(r.symbol);
+    const rs1d = r.rs_1d != null ? r.rs_1d : null;
+    const rs1dStr = rs1d != null ? `<span class="mono ${rs1d>=0?'pos':'neg'}" style="font-size:10px">${rs1d>=0?'+':''}${rs1d.toFixed(1)}</span>` : '–';
+    const chg5d = r.change_5d != null ? r.change_5d : null;
+    const chg5dStr = chg5d != null ? `<span class="${chg5d>=0?'pos':'neg'}">${chg5d>=0?'+':''}${chg5d.toFixed(1)}%</span>` : '–';
+    return`
     <tr class="${isTop?'top-row':''}" onclick="openDetail('${r.symbol}')">
+      <td onclick="event.stopPropagation()"><button class="wl-star ${inWl?'on':''}" onclick="toggleWatchlist('${r.symbol}',this)" title="${inWl?'Remove from watchlist':'Add to watchlist'}">${inWl?'★':'☆'}</button></td>
       <td style="color:var(--text3);font-weight:700">${i+1}</td>
       <td class="sym">${r.symbol}</td>
       <td><span class="sec-chip" style="background:${r.sector_color}22;color:${r.sector_color}">${r.sector}</span></td>
       <td class="mono">${fmt(r.price)}</td>
       <td class="mono ${r.change_pct>=0?'pos':'neg'}">${r.change_pct>=0?'+':''}${r.change_pct?.toFixed(2)}%</td>
+      <td class="mono">${chg5dStr}</td>
+      <td>${rs1dStr}</td>
       <td class="mono">${r.pe!==null?r.pe:'–'}</td>
       <td class="mono" style="color:${r.vol_ratio>=2?'var(--green)':r.vol_ratio>=1.5?'var(--yellow)':'var(--text)'}">${r.vol_ratio?.toFixed(2)}x</td>
       <td>${rsiPill(r.rsi)}</td>
@@ -718,7 +872,7 @@ function buildTable(rows,isTop,mode='') {
       <td>${r.fo?'<span class="fo-badge">F&O</span>':''}</td>
       <td>${sigDots(r)}</td>
       <td>${scoreBar(r.score)}</td>
-    </tr>`).join('')+'</tbody>';
+    </tr>`;}).join('')+'</tbody>';
   return`<table>${head}${body}</table>`;
 }
 
@@ -968,6 +1122,9 @@ function renderDetail(d) {
   `;
 
   document.getElementById('detailPanel')._d=d;
+  // Update watchlist star in panel header
+  const wlBtn = document.getElementById('panelWlStar');
+  if (wlBtn) { const inWl=watchlist.includes(d.symbol); wlBtn.textContent=inWl?'★':'☆'; wlBtn.classList.toggle('on',inWl); }
   // Ensure 1d ohlc is cached, then build chart
   if(!d._ic) d._ic={'1d': d.ohlc||[]};
   buildLightweightChart(d, '1d', d.ohlc||[]);
@@ -980,6 +1137,11 @@ function togColl(id){const b=document.getElementById(id),c=document.getElementBy
 // ── Lightweight Charts ─────────────────────────────────────────────────────────
 function destroyCharts() {
   drawings=[]; tlClickPts=[]; pMainChart=null; pMainSeries=null;
+  pivotLines=[]; fibLines=[]; vwapLine=null;
+  showPivot=false; showFib=false; showVwap=false;
+  document.getElementById('ov-pivot')?.classList.remove('ov-active-grp');
+  document.getElementById('ov-fib')?.classList.remove('ov-active-grp');
+  document.getElementById('ov-vwap')?.classList.remove('ov-active-grp');
   chartInstances.forEach(c=>{try{c.remove();}catch(e){}});
   chartInstances=[];
   ['priceChartDiv','indChartDiv','ind2ChartDiv','rsiChartDiv'].forEach(id=>{
@@ -1277,6 +1439,95 @@ function buildLightweightChart(d, interval, ohlc) {
   pChart.subscribeCrosshairMove(p=>{
     if(p.time) rChart.setCrosshairPosition(p.seriesData.values().next().value?.value||0,p.time,rsiSeries);
   });
+}
+
+// ── Overlay toggles (Pivot, Fib, VWAP) ────────────────────────────────────────
+let showPivot = false, showFib = false, showVwap = false;
+let pivotLines = [], fibLines = [], vwapLine = null;
+
+function togPivot(btn) {
+  showPivot = !showPivot;
+  btn.classList.toggle('ov-active-grp', showPivot);
+  const d = document.getElementById('detailPanel')._d;
+  if (!d || !pMainSeries) return;
+  if (showPivot) drawPivotLines(d);
+  else { pivotLines.forEach(pl => { try { pMainSeries.removePriceLine(pl); } catch(e){} }); pivotLines = []; }
+}
+
+function togFib(btn) {
+  showFib = !showFib;
+  btn.classList.toggle('ov-active-grp', showFib);
+  const d = document.getElementById('detailPanel')._d;
+  if (!d || !pMainSeries) return;
+  if (showFib) drawFibLines(d);
+  else { fibLines.forEach(pl => { try { pMainSeries.removePriceLine(pl); } catch(e){} }); fibLines = []; }
+}
+
+function togVwap(btn) {
+  showVwap = !showVwap;
+  btn.classList.toggle('ov-active-grp', showVwap);
+  const d = document.getElementById('detailPanel')._d;
+  if (!d || !pMainChart) return;
+  if (showVwap) drawVwapLine(d);
+  else { if (vwapLine) { try { pMainChart.removeSeries(vwapLine); } catch(e){} vwapLine = null; } }
+}
+
+function drawPivotLines(d) {
+  if (!d.pivots || !pMainSeries) return;
+  const p = d.pivots;
+  const defs = [
+    { level: p.pp,  color: '#e3b341', title: 'PP',  dash: false },
+    { level: p.r1,  color: '#3fb950', title: 'R1',  dash: true },
+    { level: p.r2,  color: '#3fb950', title: 'R2',  dash: true },
+    { level: p.r3,  color: '#3fb950', title: 'R3',  dash: true },
+    { level: p.s1,  color: '#f85149', title: 'S1',  dash: true },
+    { level: p.s2,  color: '#f85149', title: 'S2',  dash: true },
+    { level: p.s3,  color: '#f85149', title: 'S3',  dash: true },
+  ];
+  pivotLines = [];
+  defs.forEach(({level, color, title, dash}) => {
+    if (!level) return;
+    try {
+      const pl = pMainSeries.createPriceLine({
+        price: level, color, lineWidth: 1,
+        lineStyle: dash ? LightweightCharts.LineStyle.Dashed : LightweightCharts.LineStyle.Solid,
+        axisLabelVisible: true, title: `${title}: ${level}`,
+      });
+      pivotLines.push(pl);
+    } catch(e) {}
+  });
+}
+
+function drawFibLines(d) {
+  if (!pMainSeries) return;
+  const hi = d.high_52w, lo = d.low_52w;
+  if (!hi || !lo) return;
+  const range = hi - lo;
+  const levels = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+  const colors = ['#f85149','#e3a21a','#e3b341','#58a6ff','#3fb950','#58a6ff','#3fb950'];
+  fibLines = [];
+  levels.forEach((ratio, i) => {
+    const price = Math.round((lo + range * ratio) * 100) / 100;
+    try {
+      const pl = pMainSeries.createPriceLine({
+        price, color: colors[i], lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dashed,
+        axisLabelVisible: true, title: `Fib ${(ratio*100).toFixed(1)}%: ${price}`,
+      });
+      fibLines.push(pl);
+    } catch(e) {}
+  });
+}
+
+function drawVwapLine(d) {
+  if (!pMainChart) return;
+  const ohlc = d._ic?.[currentTl] || d.ohlc || [];
+  const vwapData = ohlc.filter(c => c.time && c.vwap != null).map(c => ({ time: c.time, value: c.vwap }));
+  if (!vwapData.length) return;
+  try {
+    vwapLine = pMainChart.addLineSeries({ color: '#bc8cff', lineWidth: 2, lastValueVisible: true, priceLineVisible: false, title: 'VWAP' });
+    vwapLine.setData(vwapData);
+  } catch(e) {}
 }
 
 // ── Signals ────────────────────────────────────────────────────────────────────
@@ -1631,7 +1882,302 @@ function renderSetups(d) {
     hideMenu();
     chartInstances.forEach(c => { try { c.timeScale().fitContent(); } catch(_) {} });
   });
+
+  // Set alert
+  document.getElementById('ctxAlert').addEventListener('click', () => {
+    hideMenu();
+    openAlertModal();
+  });
 })();
+
+// ── Breadth Bar ────────────────────────────────────────────────────────────────
+function renderBreadth(b) {
+  if (!b) return;
+  const bar = document.getElementById('breadthBar');
+  if (bar) bar.style.display = 'flex';
+  const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+  set('brAbove50', (b.pct_above_ema50 || 0) + '%');
+  set('brAdv', b.advances || 0);
+  set('brDec', b.declines || 0);
+  set('brADR', (b.adv_dec_ratio || 0).toFixed(2));
+  set('brHighs', b.new_52w_highs || 0);
+}
+
+// ── Watchlist ─────────────────────────────────────────────────────────────────
+function saveWatchlist() {
+  localStorage.setItem('asta-watchlist', JSON.stringify(watchlist));
+  const badge = document.getElementById('wlBadge');
+  if (badge) badge.textContent = watchlist.length;
+  const cnt = document.getElementById('wlCount');
+  if (cnt) cnt.textContent = watchlist.length;
+}
+
+function toggleWatchlist(symbol, btn) {
+  const idx = watchlist.indexOf(symbol);
+  if (idx >= 0) { watchlist.splice(idx, 1); if(btn){btn.textContent='☆';btn.classList.remove('on');} }
+  else { watchlist.push(symbol); if(btn){btn.textContent='★';btn.classList.add('on');} }
+  saveWatchlist();
+  if (activeTab === 'watchlist') renderWatchlist();
+}
+
+function toggleWatchlistFromPanel() {
+  const d = document.getElementById('detailPanel')._d;
+  if (!d) return;
+  const btn = document.getElementById('panelWlStar');
+  toggleWatchlist(d.symbol, btn);
+}
+
+function renderWatchlist() {
+  const cnt = document.getElementById('wlCount');
+  if (cnt) cnt.textContent = watchlist.length;
+  const badge = document.getElementById('wlBadge');
+  if (badge) badge.textContent = watchlist.length;
+  const el = document.getElementById('watchlistContent');
+  if (!el) return;
+  if (!watchlist.length) {
+    el.innerHTML = `<div class="loading" style="color:var(--text3)"><div style="font-size:28px">⭐</div><div>No stocks in watchlist yet</div><div style="font-size:10px;margin-top:4px">Star stocks in the Scan tab to add them here</div></div>`;
+    return;
+  }
+  const rows = watchlist.map(sym => {
+    const r = allResults.find(x => x.symbol === sym);
+    if (!r) return `<tr onclick="openDetail('${sym}')"><td class="sym">${sym}</td><td colspan="9" style="color:var(--text3)">Run a scan to see live data</td><td onclick="event.stopPropagation()"><button class="wl-star on" onclick="toggleWatchlist('${sym}',this)">★</button></td></tr>`;
+    return `<tr onclick="openDetail('${r.symbol}')">
+      <td class="sym">${r.symbol}</td>
+      <td><span class="sec-chip" style="background:${r.sector_color}22;color:${r.sector_color}">${r.sector}</span></td>
+      <td class="mono">${fmt(r.price)}</td>
+      <td class="mono ${r.change_pct>=0?'pos':'neg'}">${r.change_pct>=0?'+':''}${r.change_pct?.toFixed(2)}%</td>
+      <td>${rsiPill(r.rsi)}</td>
+      <td class="mono" style="color:${r.vol_ratio>=2?'var(--green)':r.vol_ratio>=1.5?'var(--yellow)':'var(--text)'}">${r.vol_ratio?.toFixed(2)}x</td>
+      <td>${scoreBar(r.score)}</td>
+      <td>${sigDots(r)}</td>
+      <td>${r.fo?'<span class="fo-badge">F&O</span>':''}</td>
+      <td onclick="event.stopPropagation()"><button class="wl-star on" onclick="toggleWatchlist('${r.symbol}',this)">★</button></td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `<div class="tbl-wrap" style="margin:14px 16px"><table>
+    <thead><tr><th>Ticker</th><th>Sector</th><th>Price</th><th>Chg%</th><th>RSI</th><th>Vol</th><th>Score</th><th>Sigs</th><th>F&O</th><th>★</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
+}
+
+function clearWatchlist() {
+  watchlist = [];
+  saveWatchlist();
+  renderWatchlist();
+  if (allResults.length) applyFilters();
+}
+
+function exportWatchlistCSV() {
+  const rows = watchlist.map(sym => {
+    const r = allResults.find(x => x.symbol === sym) || { symbol: sym };
+    return [r.symbol, r.name||'', r.sector||'', r.price||'', r.change_pct||'', r.rsi||'', r.vol_ratio||'', r.score||''].join(',');
+  });
+  const csv = 'Symbol,Name,Sector,Price,Chg%,RSI,VolRatio,Score\n' + rows.join('\n');
+  dlFile('asta-watchlist.csv', csv);
+}
+
+
+// ── Export CSV ────────────────────────────────────────────────────────────────
+function exportCSV() {
+  if (!filtered.length) return;
+  const hdrs = 'Symbol,Name,Sector,Price,Chg%,5D%,RS_1D,PE,VolRatio,RSI,ADX,Score';
+  const rows = filtered.map(r => [r.symbol, r.name||'', r.sector||'', r.price||'', r.change_pct||'', r.change_5d||'', r.rs_1d||'', r.pe||'', r.vol_ratio||'', r.rsi||'', r.adx||'', r.score||''].join(','));
+  dlFile(`asta-scan-${selMkt}.csv`, hdrs + '\n' + rows.join('\n'));
+}
+
+function dlFile(name, content) {
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(content);
+  a.download = name;
+  a.click();
+}
+
+// ── Price Alerts ─────────────────────────────────────────────────────────────
+async function openAlertModal(symbol) {
+  const sym = symbol || document.getElementById('detailPanel')._d?.symbol;
+  if (!sym) return;
+  document.getElementById('alertModalSym').textContent = sym;
+  document.getElementById('alertPrice').value = '';
+  document.getElementById('alertNote').value = '';
+  document.getElementById('alertModal').classList.add('show');
+  await loadAlertList(sym);
+}
+
+function closeAlertModal() {
+  document.getElementById('alertModal').classList.remove('show');
+}
+
+async function loadAlertList(symbol) {
+  try {
+    const all = await fetch('/api/alerts').then(r => r.json());
+    const mine = all.filter(a => !symbol || a.symbol === symbol);
+    const el = document.getElementById('alertList');
+    if (!el) return;
+    if (!mine.length) { el.innerHTML = `<div style="font-size:10px;color:var(--text3);text-align:center;padding:8px">No active alerts${symbol ? ' for ' + symbol : ''}</div>`; return; }
+    el.innerHTML = mine.map(a => `
+      <div class="alert-item">
+        <span class="alert-sym">${a.symbol}</span>
+        <span class="alert-cond">${a.condition === 'above' ? '▲ Above' : '▼ Below'} ₹${a.price}${a.note ? ' · ' + a.note : ''}</span>
+        ${a.triggered ? '<span style="font-size:9px;color:var(--green);font-weight:700">✓ HIT</span>' : ''}
+        <button class="adel" onclick="delAlert(${a.id}, this)">✕</button>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+async function submitAlert() {
+  const sym = document.getElementById('alertModalSym').textContent;
+  const price = parseFloat(document.getElementById('alertPrice').value);
+  const condition = document.getElementById('alertCondition').value;
+  const note = document.getElementById('alertNote').value.trim();
+  if (!sym || !price) return;
+  try {
+    await fetch('/api/alerts', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({symbol:sym, price, condition, note}) });
+    document.getElementById('alertPrice').value = '';
+    document.getElementById('alertNote').value = '';
+    await loadAlertList(sym);
+  } catch(e) { alert('Failed to add alert: ' + e.message); }
+}
+
+async function delAlert(id, btn) {
+  try {
+    await fetch(`/api/alerts/${id}`, { method: 'DELETE' });
+    const sym = document.getElementById('alertModalSym').textContent;
+    await loadAlertList(sym);
+  } catch(e) {}
+}
+
+document.getElementById('alertModal').addEventListener('click', e => { if(e.target === document.getElementById('alertModal')) closeAlertModal(); });
+
+// ── Intraday Scanner ──────────────────────────────────────────────────────────
+let intradayScanning = false;
+
+async function startIntradayScan(force = false) {
+  if (intradayScanning) return;
+  if (!force && intradayData) { renderIntraday(intradayData); return; }
+  intradayScanning = true;
+  const interval = document.getElementById('intradayInterval')?.value || '15m';
+  document.getElementById('intradayContent').innerHTML = `<div class="loading"><div class="spinner"></div><div>Scanning intraday (${interval})…</div></div>`;
+  try {
+    const d = await fetch(`/api/intraday/${selMkt}/${interval}?force=${force}`).then(r => r.json());
+    intradayData = d;
+    renderIntraday(d);
+  } catch(e) {
+    document.getElementById('intradayContent').innerHTML = `<div class="loading" style="color:var(--red)">Scan failed: ${e.message}</div>`;
+  } finally { intradayScanning = false; }
+}
+
+function renderIntraday(d) {
+  if (!d) return;
+  const interval = d.interval || '–';
+
+  function intraRow(r, detail = '') {
+    const chgCls = r.change_pct >= 0 ? 'pos' : 'neg';
+    const chg = `${r.change_pct >= 0 ? '+' : ''}${r.change_pct?.toFixed(2)}%`;
+    const vwapColor = r.above_vwap ? 'var(--green)' : 'var(--red)';
+    return `<div class="setup-row" onclick="openDetail('${r.symbol}')">
+      <div class="setup-sym">${r.symbol}</div>
+      <div class="setup-meta">${detail || r.sector || ''}</div>
+      <div class="setup-right">
+        <span class="setup-chg ${chgCls}">${chg}</span>
+        <span class="setup-detail" style="color:${vwapColor}">${r.above_vwap ? '▲VWAP' : '▼VWAP'} · RSI ${r.rsi}</span>
+      </div>
+    </div>`;
+  }
+
+  function intraSection(title, cls, icon, rows, detailFn) {
+    if (!rows?.length) return `<div class="setup-section"><div class="setup-sec-hdr ${cls}"><span>${icon}</span><h3>${title}</h3><span class="cnt">0</span></div><div class="setup-empty">None</div></div>`;
+    return `<div class="setup-section"><div class="setup-sec-hdr ${cls}"><span>${icon}</span><h3>${title}</h3><span class="cnt">${rows.length}</span></div>
+      ${rows.slice(0,10).map(r => intraRow(r, detailFn ? detailFn(r) : '')).join('')}
+      ${rows.length>10?`<div class="setup-empty">+${rows.length-10} more</div>`:''}</div>`;
+  }
+
+  document.getElementById('intradayContent').innerHTML = `
+    <div style="padding:8px 16px;font-size:10px;color:var(--text3)">Interval: <strong style="color:var(--text)">${interval}</strong> · ${(d.all||[]).length} stocks analyzed</div>
+    <div class="setups-layout">
+      <div class="setup-col">
+        ${intraSection('Opening Range Break ↑', 'bull', '🔺', d.or_break_up, r => `OR ↑ ${r.or_high}`)}
+        ${intraSection('Opening Range Break ↓', 'bear', '🔻', d.or_break_down, r => `OR ↓ ${r.or_low}`)}
+      </div>
+      <div class="setup-col">
+        ${intraSection('VWAP Cross Up', 'bull', '📈', d.vwap_cross_up, r => `VWAP ₹${r.vwap}`)}
+        ${intraSection('VWAP Cross Down', 'bear', '📉', d.vwap_cross_down, r => `VWAP ₹${r.vwap}`)}
+      </div>
+      <div class="setup-col">
+        ${intraSection('Above VWAP + Vol Surge', 'bull', '🚀', d.above_vwap_surge, r => `Vol ${r.vol_ratio?.toFixed(1)}x`)}
+        ${intraSection('RSI Overbought (≥70)', 'warn', '⚠️', d.rsi_overbought, r => `RSI ${r.rsi}`)}
+        ${intraSection('RSI Oversold (≤30)', 'info', '↩️', d.rsi_oversold, r => `RSI ${r.rsi}`)}
+      </div>
+    </div>`;
+}
+
+// ── Confluence Scanner ────────────────────────────────────────────────────────
+let confluenceScanning = false;
+
+async function startConfluenceScan(force = false) {
+  if (confluenceScanning) return;
+  if (!force && confluenceData) { renderConfluence(confluenceData); return; }
+  confluenceScanning = true;
+  document.getElementById('confluenceContent').innerHTML = `<div class="loading"><div class="spinner"></div><div>Scanning Daily + Weekly + Monthly alignment…</div></div>`;
+  try {
+    const d = await fetch(`/api/confluence/${selMkt}?force=${force}`).then(r => r.json());
+    confluenceData = d;
+    renderConfluence(d);
+  } catch(e) {
+    document.getElementById('confluenceContent').innerHTML = `<div class="loading" style="color:var(--red)">Scan failed: ${e.message}</div>`;
+  } finally { confluenceScanning = false; }
+}
+
+function renderConfluence(d) {
+  if (!d) return;
+  document.getElementById('confStrongBull').textContent = (d.strong_bull||[]).length || '0';
+  document.getElementById('confBull').textContent       = (d.bull||[]).length       || '0';
+  document.getElementById('confStrongBear').textContent = (d.strong_bear||[]).length|| '0';
+  document.getElementById('confBear').textContent       = (d.bear||[]).length       || '0';
+
+  function tfRow(r) {
+    const tfs = r.timeframes || {};
+    const pills = [['1d','D'],['1wk','W'],['1mo','M']].map(([k,lbl]) => {
+      const tf = tfs[k];
+      if (!tf) return `<span class="tf-pill neu">${lbl} –</span>`;
+      const cls = tf.bull ? 'bull' : tf.bear ? 'bear' : 'neu';
+      return `<span class="tf-pill ${cls}">${lbl} ${tf.rsi}</span>`;
+    }).join('');
+    return `<div class="conf-card ${r.confluence.replace('_','-')}" onclick="openDetail('${r.symbol}')">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="tl-sym">${r.symbol}</span>
+        <span style="font-size:9px;font-weight:700;color:${r.bull_count>r.bear_count?'var(--green)':'var(--red)'}">${r.confluence.replace('_',' ').toUpperCase()}</span>
+      </div>
+      <div style="font-size:10px;color:var(--text2);margin-top:2px">${r.name||''}</div>
+      <div class="tf-row">${pills}</div>
+    </div>`;
+  }
+
+  const groups = [
+    { key:'strong_bull', label:'Strong Bull (3/3 aligned)', cls:'bull' },
+    { key:'bull',        label:'Bull (2/3 aligned)', cls:'bull' },
+    { key:'strong_bear', label:'Strong Bear (3/3 aligned)', cls:'bear' },
+    { key:'bear',        label:'Bear (2/3 aligned)', cls:'bear' },
+    { key:'neutral',     label:'Neutral / Mixed', cls:'' },
+  ];
+
+  const html = groups.map(g => {
+    const rows = d[g.key] || [];
+    if (!rows.length) return '';
+    return `<div class="sec-hdr"><h2 class="${g.cls}">${g.cls==='bull'?'🟢':g.cls==='bear'?'🔴':'⬜'} ${g.label}</h2><div class="badge">${rows.length}</div></div>
+      <div class="conf-grid">${rows.map(tfRow).join('')}</div>`;
+  }).join('');
+
+  document.getElementById('confluenceContent').innerHTML = html || '<div class="loading" style="color:var(--text3)">No confluence signals found</div>';
+}
+
+// ── Pivot + Fib draw on detail open ──────────────────────────────────────────
+// Re-apply overlays after chart rebuild (pivot/fib toggled before interval change)
+const _postBuildOverlays = () => {
+  if (showPivot) { const d = document.getElementById('detailPanel')._d; if(d) drawPivotLines(d); }
+  if (showFib)   { const d = document.getElementById('detailPanel')._d; if(d) drawFibLines(d); }
+  if (showVwap)  { const d = document.getElementById('detailPanel')._d; if(d) drawVwapLine(d); }
+};
+
+// ── Context menu: Set Alert ───────────────────────────────────────────────────
 
 // If server embedded scan data, render it immediately — no fetch needed
 if (window.__INITIAL_SCAN__ && window.__INITIAL_SCAN__.results?.length) {
@@ -1655,13 +2201,47 @@ init(); // badge + market info + FII/DII (runs in background, doesn't block rend
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
   const btn = document.getElementById('themeBtn');
   if(btn) btn.textContent = isLight ? '☀️' : '🌙';
+  // Watchlist badge on load
+  const wlBadge = document.getElementById('wlBadge');
+  if(wlBadge) wlBadge.textContent = watchlist.length;
 })();
 
 </script>
+<!-- ── Alert Modal ── -->
+<div class="modal-bg" id="alertModal">
+  <div class="modal">
+    <h3>🔔 Price Alerts — <span id="alertModalSym">–</span></h3>
+    <div class="modal-row" style="flex-wrap:wrap;gap:8px;align-items:flex-end">
+      <div style="flex:1;min-width:100px">
+        <label>Price (₹)</label>
+        <input class="fi" id="alertPrice" type="number" step="0.01" placeholder="e.g. 1500">
+      </div>
+      <div>
+        <label>Condition</label>
+        <select class="fi" id="alertCondition">
+          <option value="above">Crosses Above</option>
+          <option value="below">Crosses Below</option>
+        </select>
+      </div>
+      <div style="flex:2;min-width:120px">
+        <label>Note (optional)</label>
+        <input class="fi" id="alertNote" type="text" placeholder="e.g. breakout level">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-blue" style="flex:1" onclick="submitAlert()">Add Alert</button>
+      <button class="btn btn-sm" onclick="closeAlertModal()">Cancel</button>
+    </div>
+    <div class="alert-list" id="alertList"></div>
+  </div>
+</div>
+
 <div id="ctxMenu">
   <div class="ctx-item" id="ctxReset">↺ &nbsp;Reset chart to default</div>
   <div class="ctx-sep"></div>
   <div class="ctx-item" id="ctxFitAll">⤢ &nbsp;Fit all data</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" id="ctxAlert">🔔 &nbsp;Set Price Alert</div>
 </div>
 
 </body>

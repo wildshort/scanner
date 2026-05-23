@@ -1,5 +1,5 @@
 import json, time, os, numpy as np
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.responses import HTMLResponse, JSONResponse
 import asyncio
 
@@ -88,6 +88,12 @@ async def scan(market: str, force: bool = False):
         return _j({"error": str(e), "results": [], "sectors": [], "total": 0})
     _cache[market] = data
     _cache_ts[market] = now
+    # Check price alerts against fresh prices
+    try:
+        from alerts import check_alerts
+        check_alerts(data.get("results", []))
+    except Exception:
+        pass
     return _j({**data, "cached": False, "scanned_at": now, "market": market})
 
 
@@ -200,6 +206,83 @@ async def fiidii():
     from kite_data import get_fii_dii
     data = await loop.run_in_executor(None, get_fii_dii)
     return _j(data)
+
+
+@app.get("/api/alerts")
+async def get_alerts():
+    from alerts import get_alerts as _get
+    return _j(_get())
+
+
+@app.post("/api/alerts")
+async def add_alert(body: dict = Body(...)):
+    from alerts import add_alert as _add
+    symbol    = body.get("symbol", "")
+    price     = body.get("price", 0)
+    condition = body.get("condition", "above")
+    note      = body.get("note", "")
+    if not symbol or not price:
+        raise HTTPException(400, "symbol and price required")
+    if condition not in ("above", "below"):
+        raise HTTPException(400, "condition must be 'above' or 'below'")
+    alert = _add(symbol, float(price), condition, note)
+    return _j(alert)
+
+
+@app.delete("/api/alerts/{alert_id}")
+async def delete_alert(alert_id: int):
+    from alerts import delete_alert as _del
+    ok = _del(alert_id)
+    if not ok:
+        raise HTTPException(404, f"Alert {alert_id} not found")
+    return _j({"ok": True})
+
+
+@app.get("/api/confluence/{market}")
+async def confluence(market: str, force: bool = False):
+    import logging as _log
+    from universe import MARKETS
+    if market not in MARKETS:
+        raise HTTPException(404, f"Unknown market: {market}")
+    key = f"conf_{market}"
+    now = time.time()
+    if not force and key in _cache and now - _cache_ts.get(key, 0) < CACHE_TTL:
+        return _j({**_cache[key], "cached": True})
+    loop = asyncio.get_running_loop()
+    from pattern_scanner import run_confluence_scan
+    try:
+        data = await loop.run_in_executor(None, lambda: run_confluence_scan(market))
+    except Exception as e:
+        _log.getLogger(__name__).error(f"run_confluence_scan({market}) failed: {e}", exc_info=True)
+        return _j({"error": str(e)})
+    _cache[key] = data
+    _cache_ts[key] = now
+    return _j({**data, "cached": False, "scanned_at": now})
+
+
+@app.get("/api/intraday/{market}/{interval}")
+async def intraday(market: str, interval: str, force: bool = False):
+    import logging as _log
+    from universe import MARKETS
+    valid_intervals = {"5m", "10m", "15m", "30m", "1h"}
+    if market not in MARKETS:
+        raise HTTPException(404, f"Unknown market: {market}")
+    if interval not in valid_intervals:
+        raise HTTPException(400, f"Invalid interval: {interval}")
+    key = f"intra_{market}_{interval}"
+    now = time.time()
+    if not force and key in _cache and now - _cache_ts.get(key, 0) < 60:
+        return _j({**_cache[key], "cached": True})
+    loop = asyncio.get_running_loop()
+    from pattern_scanner import run_intraday_scan
+    try:
+        data = await loop.run_in_executor(None, lambda: run_intraday_scan(market, interval))
+    except Exception as e:
+        _log.getLogger(__name__).error(f"run_intraday_scan({market}/{interval}) failed: {e}", exc_info=True)
+        return _j({"error": str(e)})
+    _cache[key] = data
+    _cache_ts[key] = now
+    return _j({**data, "cached": False, "scanned_at": now})
 
 
 @app.get("/api/cache/clear")
