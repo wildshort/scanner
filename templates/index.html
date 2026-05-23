@@ -631,6 +631,43 @@ td{padding:8px 11px;white-space:nowrap}
   </div>
 </div>
 
+<!-- ── Alert Modal ── -->
+<div class="modal-bg" id="alertModal">
+  <div class="modal">
+    <h3>🔔 Price Alerts — <span id="alertModalSym">–</span></h3>
+    <div class="modal-row" style="flex-wrap:wrap;gap:8px;align-items:flex-end">
+      <div style="flex:1;min-width:100px">
+        <label>Price (₹)</label>
+        <input class="fi" id="alertPrice" type="number" step="0.01" placeholder="e.g. 1500">
+      </div>
+      <div>
+        <label>Condition</label>
+        <select class="fi" id="alertCondition">
+          <option value="above">Crosses Above</option>
+          <option value="below">Crosses Below</option>
+        </select>
+      </div>
+      <div style="flex:2;min-width:120px">
+        <label>Note (optional)</label>
+        <input class="fi" id="alertNote" type="text" placeholder="e.g. breakout level">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-blue" style="flex:1" onclick="submitAlert()">Add Alert</button>
+      <button class="btn btn-sm" onclick="closeAlertModal()">Cancel</button>
+    </div>
+    <div class="alert-list" id="alertList"></div>
+  </div>
+</div>
+
+<div id="ctxMenu">
+  <div class="ctx-item" id="ctxReset">↺ &nbsp;Reset chart to default</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" id="ctxFitAll">⤢ &nbsp;Fit all data</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" id="ctxAlert">🔔 &nbsp;Set Price Alert</div>
+</div>
+
 <script>
 // ── Theme ──────────────────────────────────────────────────────────────────────
 (function(){
@@ -2233,42 +2270,6 @@ init(); // badge + market info + FII/DII (runs in background, doesn't block rend
 })();
 
 </script>
-<!-- ── Alert Modal ── -->
-<div class="modal-bg" id="alertModal">
-  <div class="modal">
-    <h3>🔔 Price Alerts — <span id="alertModalSym">–</span></h3>
-    <div class="modal-row" style="flex-wrap:wrap;gap:8px;align-items:flex-end">
-      <div style="flex:1;min-width:100px">
-        <label>Price (₹)</label>
-        <input class="fi" id="alertPrice" type="number" step="0.01" placeholder="e.g. 1500">
-      </div>
-      <div>
-        <label>Condition</label>
-        <select class="fi" id="alertCondition">
-          <option value="above">Crosses Above</option>
-          <option value="below">Crosses Below</option>
-        </select>
-      </div>
-      <div style="flex:2;min-width:120px">
-        <label>Note (optional)</label>
-        <input class="fi" id="alertNote" type="text" placeholder="e.g. breakout level">
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:4px">
-      <button class="btn btn-blue" style="flex:1" onclick="submitAlert()">Add Alert</button>
-      <button class="btn btn-sm" onclick="closeAlertModal()">Cancel</button>
-    </div>
-    <div class="alert-list" id="alertList"></div>
-  </div>
-</div>
-
-<div id="ctxMenu">
-  <div class="ctx-item" id="ctxReset">↺ &nbsp;Reset chart to default</div>
-  <div class="ctx-sep"></div>
-  <div class="ctx-item" id="ctxFitAll">⤢ &nbsp;Fit all data</div>
-  <div class="ctx-sep"></div>
-  <div class="ctx-item" id="ctxAlert">🔔 &nbsp;Set Price Alert</div>
-</div>
 
 </body>
 </html>
