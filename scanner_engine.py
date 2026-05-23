@@ -49,6 +49,35 @@ def _stoch(h: pd.Series, l: pd.Series, c: pd.Series, k=14, d=3):
     kp = 100 * (c - lo) / (hi - lo + 1e-9)
     return kp, kp.rolling(d).mean()
 
+def _supertrend(high, low, close, period: int = 10, multiplier: float = 3.0):
+    """Returns (values, direction) as numpy arrays. direction: 1=bull, -1=bear."""
+    n = len(close)
+    h = np.asarray(high, float); l = np.asarray(low, float); c = np.asarray(close, float)
+    prev_c = np.empty_like(c); prev_c[0] = c[0]; prev_c[1:] = c[:-1]
+    tr = np.maximum.reduce([h - l, np.abs(h - prev_c), np.abs(l - prev_c)])
+    atr = np.zeros(n)
+    if n >= period:
+        atr[period - 1] = tr[:period].mean()
+        for i in range(period, n):
+            atr[i] = (atr[i - 1] * (period - 1) + tr[i]) / period
+        atr[:period - 1] = atr[period - 1]
+    hl2 = (h + l) / 2.0
+    fu = hl2 + multiplier * atr; fl = hl2 - multiplier * atr
+    st = np.zeros(n); dr = np.ones(n, int)
+    st[0] = fu[0]; dr[0] = -1
+    for i in range(1, n):
+        bu = hl2[i] + multiplier * atr[i]; bl = hl2[i] - multiplier * atr[i]
+        fu[i] = bu if (bu < fu[i-1] or c[i-1] > fu[i-1]) else fu[i-1]
+        fl[i] = bl if (bl > fl[i-1] or c[i-1] < fl[i-1]) else fl[i-1]
+        if st[i-1] == fu[i-1]:
+            dr[i] =  1 if c[i] > fu[i] else -1
+            st[i] = fl[i] if dr[i] == 1 else fu[i]
+        else:
+            dr[i] = -1 if c[i] < fl[i] else 1
+            st[i] = fu[i] if dr[i] == -1 else fl[i]
+    return st, dr
+
+
 def _ha(df: pd.DataFrame) -> pd.DataFrame:
     ha = pd.DataFrame(index=df.index)
     ha['close'] = (df['open']+df['high']+df['low']+df['close'])/4
@@ -114,6 +143,7 @@ def analyze_symbol(symbol: str, include_chart: bool = True) -> dict | None:
         ema50 = close.ewm(span=50, adjust=False).mean()
         ha    = _ha(df)
         vol20 = vol.rolling(20).mean()
+        st_vals, st_dirs = _supertrend(high.values, low.values, close.values)
 
         price     = float(close.iloc[-1])
         prev_close= float(close.iloc[-2])
@@ -133,6 +163,9 @@ def analyze_symbol(symbol: str, include_chart: bool = True) -> dict | None:
         ha_bullish     = bool(float(ha['close'].iloc[-1]) > float(ha['open'].iloc[-1]))
 
         change_pct = round((price - prev_close) / prev_close * 100, 2)
+        st_bull    = bool(int(st_dirs[-1]) == 1)
+        st_crossed = len(st_dirs) > 1 and int(st_dirs[-1]) != int(st_dirs[-2])
+        st_val     = round(float(st_vals[-1]), 2)
 
         # Fundamentals
         pe = mktcap = None
@@ -183,6 +216,9 @@ def analyze_symbol(symbol: str, include_chart: bool = True) -> dict | None:
             "macd_crossover": macd_crossover,
             "in_bb_upper":   in_bb_upper,
             "ha_bullish":    ha_bullish,
+            "st_bull":       st_bull,
+            "st_crossed":    st_crossed,
+            "st_val":        st_val,
         }
         row["score"] = _score(row)
 
@@ -223,6 +259,7 @@ def analyze_symbol(symbol: str, include_chart: bool = True) -> dict | None:
             ema5_all   = close.ewm(span=5,  adjust=False).mean()
             ema50_all  = close.ewm(span=50, adjust=False).mean()
             sk_all, sd_all = _stoch(high, low, close)
+            st_all, stdir_all = _supertrend(high.values, low.values, close.values)
 
             df_1y = df.tail(n1y)
             slice_idx = range(len(df) - min(n1y, len(df)), len(df))
@@ -252,6 +289,8 @@ def analyze_symbol(symbol: str, include_chart: bool = True) -> dict | None:
                     "adx_bar":   _f(adx_all.iloc[pos]),
                     "stoch_k":   _f(sk_all.iloc[pos]),
                     "stoch_d":   _f(sd_all.iloc[pos]),
+                    "st":        _f(st_all[pos]),
+                    "st_dir":    int(stdir_all[pos]),
                 })
             row["ohlc"] = ohlc
 
@@ -294,6 +333,7 @@ def fetch_chart_data(symbol: str, interval: str) -> dict | None:
         ema5               = close.ewm(span=5,  adjust=False).mean()
         ema50              = close.ewm(span=50, adjust=False).mean()
         sk, sd             = _stoch(high, low, close)
+        st_v, st_d         = _supertrend(high.values, low.values, close.values)
 
         ohlc = []
         for i, (idx, r) in enumerate(df.iterrows()):
@@ -318,6 +358,8 @@ def fetch_chart_data(symbol: str, interval: str) -> dict | None:
                 "adx_bar":   _f(adx_s.iloc[i]),
                 "stoch_k":   _f(sk.iloc[i]),
                 "stoch_d":   _f(sd.iloc[i]),
+                "st":        _f(st_v[i]),
+                "st_dir":    int(st_d[i]),
             })
         return {"symbol": symbol, "interval": interval, "ohlc": ohlc}
     except Exception as e:

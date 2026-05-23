@@ -172,6 +172,28 @@ async def momentum(market: str, force: bool = False):
     return _j({**data, "cached": False, "scanned_at": now})
 
 
+@app.get("/api/setups/{market}")
+async def setups(market: str, force: bool = False):
+    import logging as _log
+    from universe import MARKETS
+    if market not in MARKETS:
+        raise HTTPException(404, f"Unknown market: {market}")
+    key = f"setups_{market}"
+    now = time.time()
+    if not force and key in _cache and now - _cache_ts.get(key, 0) < CACHE_TTL:
+        return _j({**_cache[key], "cached": True})
+    loop = asyncio.get_running_loop()
+    from pattern_scanner import run_setups_scan
+    try:
+        data = await loop.run_in_executor(None, lambda: run_setups_scan(market))
+    except Exception as e:
+        _log.getLogger(__name__).error(f"run_setups_scan({market}) failed: {e}", exc_info=True)
+        return _j({"error": str(e)})
+    _cache[key] = data
+    _cache_ts[key] = now
+    return _j({**data, "cached": False, "scanned_at": now})
+
+
 @app.get("/api/fiidii")
 async def fiidii():
     loop = asyncio.get_running_loop()

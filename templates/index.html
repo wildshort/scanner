@@ -234,6 +234,31 @@ td{padding:8px 11px;white-space:nowrap}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
 
+/* ── Setups tab ── */
+.setup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;margin-bottom:14px}
+.setup-section{background:var(--bg2);border:1px solid var(--border);border-radius:7px;overflow:hidden}
+.setup-sec-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--bg3);border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+.setup-sec-hdr h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.setup-sec-hdr .cnt{margin-left:auto;font-size:10px;font-weight:700;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1px 7px;color:var(--text2)}
+.setup-sec-hdr.bull h3{color:var(--green)}.setup-sec-hdr.bear h3{color:var(--red)}.setup-sec-hdr.warn h3{color:var(--yellow)}.setup-sec-hdr.info h3{color:var(--blue)}
+.setup-row{display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--border);cursor:pointer;font-size:11px}
+.setup-row:hover{background:var(--bg3)}.setup-row:last-child{border-bottom:none}
+.setup-sym{font-weight:700;color:var(--blue);min-width:80px}
+.setup-meta{font-size:9px;color:var(--text3);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.setup-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
+.setup-chg{font-family:'SF Mono',monospace;font-size:10px;font-weight:700}
+.setup-detail{font-size:9px;color:var(--text3)}
+.pat-tag{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;margin-right:3px}
+.pat-bull{background:rgba(63,185,80,.15);color:var(--green)}.pat-bear{background:rgba(248,81,73,.15);color:var(--red)}
+.pat-info{background:rgba(88,166,255,.12);color:var(--blue)}.pat-warn{background:rgba(227,179,65,.12);color:var(--yellow)}
+.setup-stats-bar{display:flex;flex-wrap:wrap;gap:10px;padding:10px 18px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.setup-stat{display:flex;flex-direction:column;align-items:center;gap:2px}
+.setup-stat-v{font-size:18px;font-weight:700;line-height:1}
+.setup-stat-l{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.setup-empty{padding:14px;text-align:center;color:var(--text3);font-size:10px}
+.setups-layout{display:flex;flex-wrap:wrap;gap:12px;padding:12px 16px}
+.setup-col{flex:1;min-width:300px;display:flex;flex-direction:column;gap:10px}
+
 </style>
 </head>
 <body>
@@ -305,6 +330,7 @@ td{padding:8px 11px;white-space:nowrap}
     <div class="tab" onclick="switchTab('momentum')" id="tab-momentum">Momentum <span class="tab-badge" id="momBadge">–</span></div>
     <div class="tab" onclick="switchTab('sectors')">Sectors</div>
     <div class="tab" onclick="switchTab('fiidii')">FII / DII</div>
+    <div class="tab" onclick="switchTab('setups')" id="tab-setups">Setups <span class="tab-badge" id="setupsBadge">–</span></div>
   </div>
 
   <!-- ── Scan Tab ── -->
@@ -357,6 +383,30 @@ td{padding:8px 11px;white-space:nowrap}
   <div class="tab-panel" id="panel-sectors">
     <div class="content" id="sectorContent">
       <div class="loading" style="color:var(--text3)"><div>Run a scan to see sector breakdown</div></div>
+    </div>
+  </div>
+
+  <!-- ── Setups Tab ── -->
+  <div class="tab-panel" id="panel-setups">
+    <div class="setup-stats-bar" id="setupsStats">
+      <div class="setup-stat"><div class="setup-stat-v green" id="ss52w">–</div><div class="setup-stat-l">52W Highs</div></div>
+      <div class="setup-stat"><div class="setup-stat-v blue"  id="ssVol">–</div><div class="setup-stat-l">Vol Surge</div></div>
+      <div class="setup-stat"><div class="setup-stat-v yellow" id="ssGap">–</div><div class="setup-stat-l">Gaps</div></div>
+      <div class="setup-stat"><div class="setup-stat-v green" id="ssST">–</div><div class="setup-stat-l">Supertrend↑</div></div>
+      <div class="setup-stat"><div class="setup-stat-v yellow" id="ssVCP">–</div><div class="setup-stat-l">VCP</div></div>
+      <div class="setup-stat"><div class="setup-stat-v blue"  id="ssMA">–</div><div class="setup-stat-l">MA Cross</div></div>
+      <div class="setup-stat"><div class="setup-stat-v green" id="ssCdl">–</div><div class="setup-stat-l">Candle Pat</div></div>
+      <div class="setup-stat"><div class="setup-stat-v purple" id="ssCls">–</div><div class="setup-stat-l">Classical</div></div>
+      <div style="margin-left:auto">
+        <button class="btn btn-blue" style="padding:5px 14px;font-size:11px" id="setupScanBtn" onclick="startSetupsScan(true)">Scan Setups</button>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto" id="setupsContent">
+      <div class="loading" style="color:var(--text3)">
+        <div style="font-size:28px">🔍</div>
+        <div>Click <strong>Scan Setups</strong> to run all 8 setup scanners</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px">52W Highs · Volume Surge · Gaps · Supertrend · VCP · MA Cross · Candle Patterns · Classical Patterns</div>
+      </div>
     </div>
   </div>
 
@@ -471,6 +521,7 @@ function switchTab(t) {
   if(t==='sectors'&&sectors.length) renderSectors(sectors);
   if(t==='momentum') startMomentumScan(false);
   if(t==='fiidii') loadFiiDii();
+  if(t==='setups'&&setupsData) renderSetups(setupsData);
 }
 
 // ── Scan ───────────────────────────────────────────────────────────────────────
@@ -1001,6 +1052,17 @@ function buildLightweightChart(d, interval, ohlc) {
     ema50s.setData(ohlc.filter(c=>c.time&&c.ema50).map(c=>({time:c.time,value:c.ema50})));
   }
 
+  // Supertrend — green line when bullish, red when bearish
+  {
+    const stOpts={lineWidth:2,lastValueVisible:false,priceLineVisible:false,lineStyle:LightweightCharts.LineStyle.Solid};
+    const stBullS=pChart.addLineSeries({...stOpts,color:'rgba(63,185,80,.7)'});
+    const stBearS=pChart.addLineSeries({...stOpts,color:'rgba(248,81,73,.7)'});
+    const stBullData=ohlc.filter(c=>c.time&&c.st!=null&&c.st_dir===1).map(c=>({time:c.time,value:c.st}));
+    const stBearData=ohlc.filter(c=>c.time&&c.st!=null&&c.st_dir===-1).map(c=>({time:c.time,value:c.st}));
+    if(stBullData.length) stBullS.setData(stBullData);
+    if(stBearData.length) stBearS.setData(stBearData);
+  }
+
   // EMA crossover arrows (only meaningful on daily+)
   if(!isIntraday) {
     const markers=[];
@@ -1294,6 +1356,177 @@ function renderMomentum(d) {
         <span style="font-size:10px;color:var(--text3);margin-left:8px">3–4 mandatory conditions met · Nearly qualifying</span></div>
       <div class="mom-grid">${watch.map(r=>makeCard(r,'watch')).join('')}</div>` : ''}
   `;
+}
+
+// ── Setups Tab ────────────────────────────────────────────────────────────────
+let setupsData = null, setupsScanning = false;
+
+async function startSetupsScan(force = false) {
+  if (setupsScanning) return;
+  if (!force && setupsData) { renderSetups(setupsData); return; }
+  setupsScanning = true;
+  const btn = document.getElementById('setupScanBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Scanning…'; }
+  document.getElementById('setupsContent').innerHTML = `
+    <div class="loading"><div class="spinner"></div>
+      <div>Running 8 setup scanners…</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">52W Highs · Volume Surge · Gaps · Supertrend · VCP · MA Cross · Candlestick · Classical</div>
+    </div>`;
+  try {
+    const d = await fetch(`/api/setups/${selMkt}?force=${force}`).then(r => r.json());
+    setupsData = d;
+    renderSetups(d);
+  } catch(e) {
+    document.getElementById('setupsContent').innerHTML = `<div class="loading" style="color:var(--red)">Scan failed: ${e.message}</div>`;
+  } finally {
+    setupsScanning = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Scan Setups'; }
+  }
+}
+
+function renderSetups(d) {
+  if (!d) return;
+
+  // Update stats bar
+  const ss = (k) => (d[k] || []).length;
+  document.getElementById('ss52w').textContent = ss('breakouts_52w');
+  document.getElementById('ssVol').textContent  = ss('vol_surge');
+  document.getElementById('ssGap').textContent  = ss('gap_up') + ss('gap_down');
+  document.getElementById('ssST').textContent   = ss('st_bull_cross');
+  document.getElementById('ssVCP').textContent  = ss('vcp');
+  document.getElementById('ssMA').textContent   = ss('golden_cross') + ss('death_cross') + ss('ema_bull_cross') + ss('ema_bear_cross');
+  document.getElementById('ssCdl').textContent  = ss('candle_bull') + ss('candle_bear');
+  document.getElementById('ssCls').textContent  = ss('classical');
+
+  const total = ss('breakouts_52w') + ss('vol_surge') + ss('gap_up') + ss('gap_down') + ss('st_bull_cross') + ss('vcp');
+  document.getElementById('setupsBadge').textContent = total || '0';
+
+  function setupRow(r, detail = '', detailCls = '') {
+    const chgCls = r.change_pct >= 0 ? 'pos' : 'neg';
+    const chg = `${r.change_pct >= 0 ? '+' : ''}${r.change_pct?.toFixed(2)}%`;
+    return `<div class="setup-row" onclick="openDetail('${r.symbol}')">
+      <div class="setup-sym">${r.symbol}</div>
+      <div class="setup-meta">${r.sector || ''}</div>
+      <div class="setup-right">
+        <span class="setup-chg ${chgCls}">${chg}</span>
+        <span class="setup-detail ${detailCls}">${detail}</span>
+      </div>
+    </div>`;
+  }
+
+  function section(title, cls, icon, rows, detailFn = () => '') {
+    if (!rows || !rows.length) return `
+      <div class="setup-section">
+        <div class="setup-sec-hdr ${cls}"><span>${icon}</span><h3>${title}</h3><span class="cnt">0</span></div>
+        <div class="setup-empty">None found</div>
+      </div>`;
+    return `
+      <div class="setup-section">
+        <div class="setup-sec-hdr ${cls}"><span>${icon}</span><h3>${title}</h3><span class="cnt">${rows.length}</span></div>
+        ${rows.slice(0, 10).map(r => setupRow(r, detailFn(r))).join('')}
+        ${rows.length > 10 ? `<div class="setup-empty">+${rows.length - 10} more</div>` : ''}
+      </div>`;
+  }
+
+  // Candlestick pattern tags
+  function candleTags(r) {
+    const p = r.candle_patterns || {};
+    const bullPats = { hammer: 'Hammer', bullish_engulfing: 'Engulf↑', pin_bar_bull: 'PinBar↑', morning_star: 'MorningStar', doji: 'Doji' };
+    const bearPats = { shooting_star: 'ShootStar', bearish_engulfing: 'Engulf↓', pin_bar_bear: 'PinBar↓', evening_star: 'EveningStar' };
+    let html = '';
+    for (const [k, label] of Object.entries(bullPats)) if (p[k]) html += `<span class="pat-tag pat-bull">${label}</span>`;
+    for (const [k, label] of Object.entries(bearPats)) if (p[k]) html += `<span class="pat-tag pat-bear">${label}</span>`;
+    return html || '–';
+  }
+
+  // Classical pattern tags
+  function classicalTags(r) {
+    const cp = r.classical_patterns || {};
+    const map = {
+      double_top: ['DblTop', 'bear'], double_bottom: ['DblBottom', 'bull'],
+      head_shoulders: ['H&S', 'bear'], inv_head_shoulders: ['InvH&S', 'bull'],
+      cup_handle: ['Cup&Handle', 'bull'],
+    };
+    let html = '';
+    for (const [k, [label, side]] of Object.entries(map)) {
+      if (cp[k]) html += `<span class="pat-tag ${side === 'bull' ? 'pat-bull' : 'pat-bear'}">${label}</span>`;
+    }
+    return html || '–';
+  }
+
+  // Build row for candle/classical (uses detail slot for tags)
+  function candleRow(r) {
+    const chgCls = r.change_pct >= 0 ? 'pos' : 'neg';
+    const chg = `${r.change_pct >= 0 ? '+' : ''}${r.change_pct?.toFixed(2)}%`;
+    return `<div class="setup-row" onclick="openDetail('${r.symbol}')">
+      <div class="setup-sym">${r.symbol}</div>
+      <div class="setup-meta" style="flex:none;margin-right:4px">${candleTags(r)}</div>
+      <div class="setup-right">
+        <span class="setup-chg ${chgCls}">${chg}</span>
+        <span class="setup-detail">₹${r.price}</span>
+      </div>
+    </div>`;
+  }
+
+  function classicalRow(r) {
+    const chgCls = r.change_pct >= 0 ? 'pos' : 'neg';
+    const chg = `${r.change_pct >= 0 ? '+' : ''}${r.change_pct?.toFixed(2)}%`;
+    return `<div class="setup-row" onclick="openDetail('${r.symbol}')">
+      <div class="setup-sym">${r.symbol}</div>
+      <div class="setup-meta" style="flex:none;margin-right:4px">${classicalTags(r)}</div>
+      <div class="setup-right">
+        <span class="setup-chg ${chgCls}">${chg}</span>
+      </div>
+    </div>`;
+  }
+
+  function makeSection(title, cls, icon, rows, rowFn) {
+    if (!rows || !rows.length) return `
+      <div class="setup-section">
+        <div class="setup-sec-hdr ${cls}"><span>${icon}</span><h3>${title}</h3><span class="cnt">0</span></div>
+        <div class="setup-empty">None found</div>
+      </div>`;
+    return `
+      <div class="setup-section">
+        <div class="setup-sec-hdr ${cls}"><span>${icon}</span><h3>${title}</h3><span class="cnt">${rows.length}</span></div>
+        ${rows.slice(0, 10).map(r => rowFn(r)).join('')}
+        ${rows.length > 10 ? `<div class="setup-empty">+${rows.length - 10} more</div>` : ''}
+      </div>`;
+  }
+
+  const col1 = `
+    ${section('52W High Breakouts', 'bull', '🚀', d.breakouts_52w, r => `${r.from_52w_high_pct <= 0.3 ? '🆕 NEW HIGH' : r.from_52w_high_pct.toFixed(1) + '% from top'}`)}
+    ${section('Volume Surge', 'bull', '📊', d.vol_surge, r => `${r.vol_ratio?.toFixed(1)}x avg vol`)}
+    ${section('Gap Up', 'bull', '⬆', d.gap_up, r => `Gap +${r.gap_pct?.toFixed(2)}%`)}
+    ${section('Gap Down', 'bear', '⬇', d.gap_down, r => `Gap ${r.gap_pct?.toFixed(2)}%`)}
+  `;
+
+  const col2 = `
+    ${section('Supertrend Bullish Cross', 'bull', '🟢', d.st_bull_cross, r => `ST ₹${r.st_val}`)}
+    ${section('Supertrend Bearish Cross', 'bear', '🔴', d.st_bear_cross, r => `ST ₹${r.st_val}`)}
+    ${section('VCP — Volatility Contraction', 'warn', '🎯', d.vcp, r => `${r.from_52w_high_pct?.toFixed(1)}% from high`)}
+  `;
+
+  const col3 = `
+    ${section('Golden Cross (EMA50>200)', 'bull', '✨', d.golden_cross, r => 'EMA50 × EMA200 ↑')}
+    ${section('Death Cross (EMA50<200)', 'bear', '💀', d.death_cross, r => 'EMA50 × EMA200 ↓')}
+    ${section('EMA Bull Cross (5>20)', 'bull', '📈', d.ema_bull_cross, r => 'EMA5 × EMA20 ↑')}
+    ${section('EMA Bear Cross (5<20)', 'bear', '📉', d.ema_bear_cross, r => 'EMA5 × EMA20 ↓')}
+  `;
+
+  const col4 = `
+    ${makeSection('Bullish Candle Patterns', 'bull', '🕯️', d.candle_bull, candleRow)}
+    ${makeSection('Bearish Candle Patterns', 'bear', '🕯️', d.candle_bear, candleRow)}
+    ${makeSection('Classical Chart Patterns', 'info', '📐', d.classical, classicalRow)}
+  `;
+
+  document.getElementById('setupsContent').innerHTML = `
+    <div class="setups-layout">
+      <div class="setup-col">${col1}</div>
+      <div class="setup-col">${col2}</div>
+      <div class="setup-col">${col3}</div>
+      <div class="setup-col">${col4}</div>
+    </div>`;
 }
 
 // ── Right-click context menu on chart ─────────────────────────────────────────
