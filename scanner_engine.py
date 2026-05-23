@@ -67,13 +67,14 @@ def _nifty_returns() -> dict:
     try:
         import yfinance as yf
         df = yf.download('^NSEI', period='2mo', auto_adjust=True, progress=False)
-        c  = df['Close'].dropna()
+        c  = df['Close'].squeeze().dropna()
         if len(c) < 6:
             return {}
+        v = lambda i: float(c.iloc[i])
         return {
-            '1d':  float((c.iloc[-1] - c.iloc[-2]) / c.iloc[-2] * 100),
-            '5d':  float((c.iloc[-1] - c.iloc[-6]) / c.iloc[-6] * 100) if len(c) >= 6 else 0,
-            '20d': float((c.iloc[-1] - c.iloc[-21]) / c.iloc[-21] * 100) if len(c) >= 21 else 0,
+            '1d':  round((v(-1) - v(-2)) / v(-2) * 100, 2),
+            '5d':  round((v(-1) - v(-6)) / v(-6) * 100, 2) if len(c) >= 6  else 0,
+            '20d': round((v(-1) - v(-21))/ v(-21)* 100, 2) if len(c) >= 21 else 0,
         }
     except Exception:
         return {}
