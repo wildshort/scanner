@@ -171,10 +171,11 @@ def analyze_symbol(symbol: str, include_chart: bool = True) -> dict | None:
         pe = mktcap = None
         try:
             import yfinance as yf
-            info = yf.Ticker(symbol + ".NS").fast_info
-            pe = getattr(info, 'trailing_pe', None)
-            mktcap = getattr(info, 'market_cap', None)
-            if pe: pe = round(float(pe), 1)
+            info = yf.Ticker(symbol + ".NS").info
+            raw_pe = info.get('trailingPE') or info.get('forwardPE')
+            pe     = round(float(raw_pe), 1) if raw_pe else None
+            mc     = info.get('marketCap')
+            mktcap = int(mc) if mc else None
         except: pass
 
         meta = get_meta(symbol)
