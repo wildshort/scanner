@@ -1,0 +1,6 @@
+services:
+  asta-scanner:
+    build: .
+    ports:
+      - "8888:8888"
+    restart: unless-stopped
