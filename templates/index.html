@@ -14,8 +14,18 @@
   --blue:#58a6ff;--blue2:rgba(88,166,255,.12);
   --yellow:#e3b341;--purple:#bc8cff;--orange:#e3a21a;
 }
+[data-theme="light"]{
+  --bg:#f6f8fa;--bg2:#ffffff;--bg3:#f0f2f5;--border:#d0d7de;
+  --text:#1f2328;--text2:#656d76;--text3:#8c959f;
+  --green:#1a7f37;--green2:rgba(26,127,55,.08);
+  --red:#cf222e;--red2:rgba(207,34,46,.08);
+  --blue:#0969da;--blue2:rgba(9,105,218,.10);
+  --yellow:#9a6700;--purple:#8250df;--orange:#bc4c00;
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+/* theme transition */
+body,header,aside,main,.tab-panel,.tbl-wrap,.panel,.info-col,.score-card,.mc,.sig-item,.tl-card,.mom-card,.setup-section{transition:background .2s,border-color .2s,color .1s}
 
 /* ── Header ── */
 header{background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0}
@@ -271,6 +281,8 @@ td{padding:8px 11px;white-space:nowrap}
     <span id="sTxt">Ready</span>
     <span style="color:var(--border)">|</span>
     <span id="sTime" style="color:var(--text3)">Not scanned</span>
+    <span style="color:var(--border)">|</span>
+    <button id="themeBtn" onclick="toggleTheme()" title="Toggle light/dark" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:3px 9px;border-radius:5px;cursor:pointer;font-size:13px;line-height:1">🌙</button>
   </div>
 </header>
 
@@ -481,6 +493,28 @@ td{padding:8px 11px;white-space:nowrap}
 </div>
 
 <script>
+// ── Theme ──────────────────────────────────────────────────────────────────────
+(function(){
+  const saved = localStorage.getItem('asta-theme') || 'dark';
+  if(saved === 'light') document.documentElement.setAttribute('data-theme','light');
+})();
+
+function toggleTheme(){
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const next = isLight ? 'dark' : 'light';
+  if(next === 'dark') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme','light');
+  localStorage.setItem('asta-theme', next);
+  document.getElementById('themeBtn').textContent = next === 'light' ? '☀️' : '🌙';
+  // Rebuild charts to pick up new background colour
+  const d = document.getElementById('detailPanel')._d;
+  if(d && document.getElementById('detailPanel').classList.contains('open')){
+    destroyCharts();
+    const ohlc = d._ic && d._ic[currentTl];
+    if(ohlc) buildLightweightChart(d, currentTl, ohlc);
+  }
+}
+
 // ── State ──────────────────────────────────────────────────────────────────────
 let allResults=[], filtered=[], markets={}, sectors=[], scanData=null;
 let selMkt='nifty50', opts={autoRef:false,bullOnly:false};
@@ -569,7 +603,30 @@ async function startScan(force=true) {
   } finally {if(btn){btn.disabled=false;btn.textContent='Scan Now';}scanInProgress=false;}
 }
 
-async function clearCache(){await fetch('/api/cache/clear');allResults=[];filtered=[];scanData=null;sectors=[];renderScanContent([]);}
+async function clearCache(){
+  const btn = document.querySelector('.btn-sm');
+  if(btn){ btn.textContent='Clearing…'; btn.disabled=true; }
+  try {
+    await fetch('/api/cache/clear');
+    // Reset ALL client state
+    allResults=[]; filtered=[]; scanData=null; sectors=[];
+    momData=null; setupsData=null;
+    renderScanContent([]);
+    document.getElementById('tlContent').innerHTML='<div class="loading" style="color:var(--text3)"><div>Cache cleared — run a scan to refresh</div></div>';
+    document.getElementById('momContent').innerHTML='<div class="loading" style="color:var(--text3)"><div>Cache cleared — click Scan Momentum</div></div>';
+    document.getElementById('setupsContent').innerHTML='<div class="loading" style="color:var(--text3)"><div>Cache cleared — click Scan Setups</div></div>';
+    document.getElementById('tlBreakouts').textContent='–';
+    document.getElementById('tlBreakdowns').textContent='–';
+    document.getElementById('tlPullbacks').textContent='–';
+    document.getElementById('tlBadge').textContent='–';
+    document.getElementById('momBadge').textContent='–';
+    document.getElementById('setupsBadge').textContent='–';
+    setStatus('off','Cache cleared');
+    if(btn){ btn.textContent='✓ Cleared'; setTimeout(()=>{btn.textContent='Clear Cache';btn.disabled=false;},1500); }
+  } catch(e) {
+    if(btn){ btn.textContent='Clear Cache'; btn.disabled=false; }
+  }
+}
 
 function updateTlBadge(tl) {
   const bo=(tl.breakouts||[]).length, bd=(tl.breakdowns||[]).length;
@@ -997,9 +1054,14 @@ function buildLightweightChart(d, interval, ohlc) {
   // Build a set of displayed times for trendline filtering
   const displayedTimes = new Set(ohlc.map(c=>c.time));
 
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const chartBg   = isLight ? '#ffffff' : '#0d1117';
+  const chartText = isLight ? '#656d76' : '#8b949e';
+  const chartGrid = isLight ? '#e8ecf0' : '#21262d';
+
   const chartOpts = {
-    layout:     {background:{color:'#0d1117'}, textColor:'#8b949e'},
-    grid:       {vertLines:{color:'#21262d'}, horzLines:{color:'#21262d'}},
+    layout:     {background:{color:chartBg}, textColor:chartText},
+    grid:       {vertLines:{color:chartGrid}, horzLines:{color:chartGrid}},
     rightPriceScale: {borderColor:'#30363d', scaleMargins:{top:.04,bottom:.08}},
     timeScale:  {borderColor:'#30363d', timeVisible:true, secondsVisible:false, rightOffset:5},
     crosshair:  {mode: LightweightCharts.CrosshairMode.Normal},
@@ -1587,6 +1649,13 @@ if (window.__INITIAL_SCAN__ && window.__INITIAL_SCAN__.results?.length) {
 }
 
 init(); // badge + market info + FII/DII (runs in background, doesn't block render)
+
+// Set correct theme button icon on load
+(function(){
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const btn = document.getElementById('themeBtn');
+  if(btn) btn.textContent = isLight ? '☀️' : '🌙';
+})();
 
 </script>
 <div id="ctxMenu">
