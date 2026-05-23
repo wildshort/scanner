@@ -104,81 +104,152 @@ def detect_candlestick_patterns(df: pd.DataFrame) -> dict[str, bool]:
 
 # ── Classical Chart Pattern Detector ──────────────────────────────────────────
 
-def _swing_pts(arr, window=8):
-    ph, pl = [], []
+def _pivot_highs(arr, window: int = 12) -> list[int]:
+    out = []
     for i in range(window, len(arr) - window):
-        seg = arr[i - window: i + window + 1]
-        if arr[i] == max(seg): ph.append(i)
-        if arr[i] == min(seg): pl.append(i)
-    return ph, pl
+        if arr[i] == max(arr[i - window: i + window + 1]):
+            out.append(i)
+    return out
+
+def _pivot_lows(arr, window: int = 12) -> list[int]:
+    out = []
+    for i in range(window, len(arr) - window):
+        if arr[i] == min(arr[i - window: i + window + 1]):
+            out.append(i)
+    return out
 
 
-def detect_classical_patterns(df: pd.DataFrame, lookback: int = 150) -> dict:
+def detect_classical_patterns(df: pd.DataFrame, lookback: int = 200) -> dict:
+    """
+    Strict classical pattern detection.
+    Uses actual high/low arrays and tighter thresholds to eliminate false positives.
+    """
     n = min(lookback, len(df))
-    if n < 50:
+    if n < 80:
         return {}
     sl  = df.tail(n)
     c   = sl['close'].values
-    h_a = sl['high'].values
-    l_a = sl['low'].values
+    h   = sl['high'].values
+    l   = sl['low'].values
     m   = len(c)
     cur = c[-1]
     pats = {}
 
-    sh, sl_i = _swing_pts(c, window=8)
+    # Use actual highs/lows with larger window — fewer, cleaner pivots
+    ph = _pivot_highs(h, window=12)
+    pl = _pivot_lows(l, window=12)
 
-    # Double Top
-    if len(sh) >= 2:
-        i1, i2 = sh[-2], sh[-1]
-        p1, p2 = c[i1], c[i2]
-        if abs(p1 - p2) / (p1 + 1e-9) < 0.04 and i2 - i1 >= 10:
-            neck = float(min(c[i1:i2 + 1]))
-            if cur < neck * 0.998:
-                pats['double_top'] = {'peak1': round(float(p1), 2), 'peak2': round(float(p2), 2), 'neckline': round(neck, 2)}
-
-    # Double Bottom
-    if len(sl_i) >= 2:
-        i1, i2 = sl_i[-2], sl_i[-1]
-        p1, p2 = l_a[i1], l_a[i2]
-        if abs(p1 - p2) / (p1 + 1e-9) < 0.04 and i2 - i1 >= 10:
-            neck = float(max(c[i1:i2 + 1]))
-            if cur > neck * 1.002:
-                pats['double_bottom'] = {'trough1': round(float(p1), 2), 'trough2': round(float(p2), 2), 'neckline': round(neck, 2)}
-
-    # Head & Shoulders
-    if len(sh) >= 3:
-        li, hi, ri = sh[-3], sh[-2], sh[-1]
-        ls, head, rs = c[li], c[hi], c[ri]
-        if head > ls * 1.03 and head > rs * 1.03 and abs(ls - rs) / (ls + 1e-9) < 0.07:
-            neck = float(np.mean([min(c[li:hi + 1]), min(c[hi:ri + 1])]))
-            if cur < neck * 0.998:
-                pats['head_shoulders'] = {'head': round(float(head), 2), 'neckline': round(neck, 2)}
-
-    # Inverse Head & Shoulders
-    if len(sl_i) >= 3:
-        li, hi, ri = sl_i[-3], sl_i[-2], sl_i[-1]
-        ls, head, rs = l_a[li], l_a[hi], l_a[ri]
-        if head < ls * 0.97 and head < rs * 0.97 and abs(ls - rs) / (ls + 1e-9) < 0.07:
-            neck = float(np.mean([max(c[li:hi + 1]), max(c[hi:ri + 1])]))
-            if cur > neck * 1.002:
-                pats['inv_head_shoulders'] = {'head': round(float(head), 2), 'neckline': round(neck, 2)}
-
-    # Cup & Handle
-    if m >= 60:
-        q = m // 4
-        left_high   = float(max(c[:q]))
-        cup_low     = float(min(c[q:3 * q]))
-        right_top   = float(max(c[3 * q:]))
-        depth       = (left_high - cup_low) / (left_high + 1e-9)
-        recovery    = (right_top - cup_low) / (left_high - cup_low + 1e-9)
-        if 0.10 <= depth <= 0.50 and recovery >= 0.80:
-            handle_seg = c[-15:]
-            handle_rng = (max(handle_seg) - min(handle_seg)) / (max(handle_seg) + 1e-9)
-            if handle_rng <= 0.15:
-                pats['cup_handle'] = {
-                    'cup_depth_pct': round(depth * 100, 1),
-                    'recovery_pct':  round(recovery * 100, 1),
+    # ── Double Top ────────────────────────────────────────────────────────────
+    # Two peaks within 3% of each other, 15–80 bars apart,
+    # valley ≥4% below peaks, current price broken below valley
+    if len(ph) >= 2:
+        i1, i2 = ph[-2], ph[-1]
+        p1, p2 = h[i1], h[i2]
+        sep = i2 - i1
+        if 15 <= sep <= 80:
+            similarity = abs(p1 - p2) / ((p1 + p2) / 2 + 1e-9)
+            valley     = float(min(l[i1:i2 + 1]))
+            peak_avg   = (p1 + p2) / 2
+            v_depth    = (peak_avg - valley) / (peak_avg + 1e-9)
+            if similarity <= 0.03 and v_depth >= 0.04 and cur < valley * 0.997:
+                pats['double_top'] = {
+                    'peak1':    round(float(p1), 2),
+                    'peak2':    round(float(p2), 2),
+                    'neckline': round(valley, 2),
                 }
+
+    # ── Double Bottom ─────────────────────────────────────────────────────────
+    if len(pl) >= 2:
+        i1, i2 = pl[-2], pl[-1]
+        p1, p2 = l[i1], l[i2]
+        sep = i2 - i1
+        if 15 <= sep <= 80:
+            similarity = abs(p1 - p2) / ((p1 + p2) / 2 + 1e-9)
+            peak       = float(max(h[i1:i2 + 1]))
+            trough_avg = (p1 + p2) / 2
+            p_height   = (peak - trough_avg) / (trough_avg + 1e-9)
+            if similarity <= 0.03 and p_height >= 0.04 and cur > peak * 1.003:
+                pats['double_bottom'] = {
+                    'trough1':  round(float(p1), 2),
+                    'trough2':  round(float(p2), 2),
+                    'neckline': round(peak, 2),
+                }
+
+    # ── Head & Shoulders ──────────────────────────────────────────────────────
+    # Head ≥5% above both shoulders; shoulders within 8% of each other;
+    # min 10 bars between each point; price broken below neckline
+    if len(ph) >= 3:
+        li, hi_i, ri = ph[-3], ph[-2], ph[-1]
+        ls, head, rs = h[li], h[hi_i], h[ri]
+        shld_sim = abs(ls - rs) / ((ls + rs) / 2 + 1e-9)
+        if (head >= ls * 1.05 and head >= rs * 1.05 and
+                shld_sim <= 0.08 and
+                hi_i - li >= 10 and ri - hi_i >= 10):
+            neck_l = float(max(min(l[li:hi_i + 1]), min(l[hi_i:ri + 1])))
+            if cur < neck_l * 0.998:
+                pats['head_shoulders'] = {
+                    'head':     round(float(head), 2),
+                    'neckline': round(neck_l, 2),
+                }
+
+    # ── Inverse Head & Shoulders ──────────────────────────────────────────────
+    if len(pl) >= 3:
+        li, hi_i, ri = pl[-3], pl[-2], pl[-1]
+        ls, head, rs = l[li], l[hi_i], l[ri]
+        shld_sim = abs(ls - rs) / ((ls + rs) / 2 + 1e-9)
+        if (head <= ls * 0.95 and head <= rs * 0.95 and
+                shld_sim <= 0.08 and
+                hi_i - li >= 10 and ri - hi_i >= 10):
+            neck_h = float(min(max(h[li:hi_i + 1]), max(h[hi_i:ri + 1])))
+            if cur > neck_h * 1.002:
+                pats['inv_head_shoulders'] = {
+                    'head':     round(float(head), 2),
+                    'neckline': round(neck_h, 2),
+                }
+
+    # ── Cup & Handle ──────────────────────────────────────────────────────────
+    # Proper criteria (Minervini / O'Neil):
+    # 1. Left rim: prior high in first 40% of lookback
+    # 2. Cup depth: 15–45% from left rim
+    # 3. Right rim recovered to within 8% of left rim
+    # 4. Cup formed over ≥30 bars (smooth U, not V)
+    # 5. Handle: 10–30 bar pullback of 3–15% from right rim
+    # 6. Handle low above cup midpoint
+    if m >= 100:
+        rim_end      = m * 40 // 100
+        left_rim_idx = int(np.argmax(h[:rim_end]))
+        left_rim     = h[left_rim_idx]
+
+        cup_start = left_rim_idx + 5
+        cup_end   = m - 15
+        if cup_end > cup_start + 25:
+            cup_bot_idx = cup_start + int(np.argmin(l[cup_start:cup_end]))
+            cup_bot     = l[cup_bot_idx]
+            cup_depth   = (left_rim - cup_bot) / (left_rim + 1e-9)
+
+            if 0.15 <= cup_depth <= 0.45:
+                right_end     = m - 10
+                right_rim_idx = cup_bot_idx + int(np.argmax(h[cup_bot_idx:right_end]))
+                right_rim     = h[right_rim_idx]
+                recovery      = (right_rim - cup_bot) / (left_rim - cup_bot + 1e-9)
+                rim_gap       = abs(left_rim - right_rim) / (left_rim + 1e-9)
+                cup_bars      = right_rim_idx - left_rim_idx
+
+                if recovery >= 0.85 and rim_gap <= 0.08 and cup_bars >= 30:
+                    handle_h   = h[right_rim_idx:]
+                    handle_l   = l[right_rim_idx:]
+                    hbars      = len(handle_l)
+                    if 5 <= hbars <= 30:
+                        h_high  = float(max(handle_h))
+                        h_low   = float(min(handle_l))
+                        h_depth = (h_high - h_low) / (h_high + 1e-9)
+                        cup_mid = cup_bot + (left_rim - cup_bot) * 0.5
+                        if 0.03 <= h_depth <= 0.15 and h_low > cup_mid:
+                            pats['cup_handle'] = {
+                                'cup_depth_pct': round(cup_depth * 100, 1),
+                                'recovery_pct':  round(recovery * 100, 1),
+                                'left_rim':      round(float(left_rim), 2),
+                            }
 
     return pats
 
