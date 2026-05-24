@@ -8,6 +8,7 @@ app = FastAPI(title="ASTA Scanner")
 _cache: dict = {}
 _cache_ts: dict = {}
 CACHE_TTL = 300
+CACHE_TTL_LARGE = 900  # 15 min for 200+ stock scans
 
 
 @app.on_event("startup")
@@ -88,8 +89,10 @@ async def scan(market: str, force: bool = False):
     from universe import MARKETS
     if market not in MARKETS:
         raise HTTPException(404, f"Unknown market: {market}")
+    from universe import MARKETS
     now = time.time()
-    if not force and market in _cache and now - _cache_ts.get(market, 0) < CACHE_TTL:
+    ttl = CACHE_TTL_LARGE if len(MARKETS.get(market, {}).get("symbols", [])) > 200 else CACHE_TTL
+    if not force and market in _cache and now - _cache_ts.get(market, 0) < ttl:
         return _j({**_cache[market], "cached": True, "scanned_at": _cache_ts[market]})
     loop = asyncio.get_running_loop()
     from scanner_engine import run_scan

@@ -355,6 +355,7 @@ td{padding:8px 11px;white-space:nowrap}
       <option value="niftynext50">Nifty Next 50</option>
       <option value="nifty100">Nifty 100</option>
       <option value="nifty200">Nifty 200</option>
+      <option value="nifty500">Nifty 500</option>
       <option value="midcap50">Nifty Midcap 50</option>
       <option value="midcap100">Nifty Midcap 100</option>
     </select>
@@ -768,15 +769,18 @@ async function startScan(force=true) {
   const btn=document.getElementById('scanBtn');
   if(btn){btn.disabled=true;btn.textContent='Scanning…';}
   setStatus('scan','Scanning '+((markets[selMkt]?.name)||selMkt)+'…');
+  const stockCount = (markets[selMkt]?.count) || '–';
+  const isLarge = stockCount > 200;
   document.getElementById('scanContent').innerHTML=`
     <div class="loading">
       <div class="spinner"></div>
-      <div>Fetching live data for ${(markets[selMkt]?.count)||'–'} stocks…</div>
-      <div style="font-size:10px;color:var(--text3)">ASTA indicators · Trendlines · Sectors</div>
+      <div>Fetching live data for ${stockCount} stocks…</div>
+      <div style="font-size:10px;color:var(--text3)">${isLarge ? '⏱ Large scan — please wait 2–4 min' : 'ASTA indicators · Trendlines · Sectors'}</div>
       <div class="pbar"><div class="pfill" id="pf" style="width:5%"></div></div>
     </div>`;
   let pct=5;
-  const pt=setInterval(()=>{pct=Math.min(pct+(100-pct)*0.07,88);const el=document.getElementById('pf');if(el)el.style.width=pct+'%';},1200);
+  const pStep = isLarge ? 0.03 : 0.07;
+  const pt=setInterval(()=>{pct=Math.min(pct+(100-pct)*pStep,88);const el=document.getElementById('pf');if(el)el.style.width=pct+'%';},1200);
 
   try {
     const data = await fetch(`/api/scan/${selMkt}${force?'?force=true':''}`).then(r=>r.json());
