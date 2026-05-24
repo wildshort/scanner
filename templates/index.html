@@ -549,7 +549,7 @@ td{padding:8px 11px;white-space:nowrap}
                  oninput="wlAcInput(this)"
                  onkeydown="wlAcKey(event)"
                  autocomplete="off">
-          <div id="wlDropdown" style="display:none;position:absolute;top:100%;left:0;width:260px;background:var(--bg3);border:1px solid var(--blue);border-radius:4px;z-index:500;margin-top:2px;max-height:220px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.5)"></div>
+          <div id="wlDropdown" style="display:none;position:fixed;width:280px;background:var(--bg3);border:1px solid var(--blue);border-radius:4px;z-index:9000;max-height:240px;overflow-y:auto;box-shadow:0 4px 20px rgba(0,0,0,.7)"></div>
         </div>
         <button class="btn btn-blue" style="padding:5px 14px;font-size:12px;white-space:nowrap" onclick="addToWatchlistManual()">+ Add</button>
       </div>
@@ -2057,6 +2057,10 @@ function wlAcInput(inp) {
   const q = inp.value.trim();
   const dd = document.getElementById('wlDropdown');
   if (!q || q.includes(',')) { dd.style.display='none'; return; }
+  // Position dropdown below input (fixed, escapes overflow:hidden ancestors)
+  const rect = inp.getBoundingClientRect();
+  dd.style.top = (rect.bottom + 4) + 'px';
+  dd.style.left = rect.left + 'px';
   // Match against scanned symbols and names
   const pool = allResults.length ? allResults : [];
   const matches = pool.filter(r =>
