@@ -902,7 +902,7 @@ function buildTable(rows,isTop,mode='') {
     const chg5dStr = chg5d != null ? `<span class="${chg5d>=0?'pos':'neg'}">${chg5d>=0?'+':''}${chg5d.toFixed(1)}%</span>` : '–';
     return`
     <tr class="${isTop?'top-row':''}" onclick="openDetail('${r.symbol}')">
-      <td onclick="event.stopPropagation()"><button class="wl-star ${inWl?'on':''}" onclick="toggleWatchlist('${r.symbol}',this)" title="${inWl?'Remove from watchlist':'Add to watchlist'}">${inWl?'★':'☆'}</button></td>
+      <td><button class="wl-star ${inWl?'on':''}" onclick="event.stopPropagation();toggleWatchlist('${r.symbol}',this)" title="${inWl?'Remove from watchlist':'Add to watchlist'}">${inWl?'★':'☆'}</button></td>
       <td style="color:var(--text3);font-weight:700">${i+1}</td>
       <td class="sym">${r.symbol}</td>
       <td><span class="sec-chip" style="background:${r.sector_color}22;color:${r.sector_color}">${r.sector}</span></td>
