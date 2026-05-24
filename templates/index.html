@@ -701,7 +701,7 @@ let chartInstances=[];
 let drawMode='cursor', drawings=[], tlClickPts=[], pMainChart=null, pMainSeries=null;
 let showPivot=false, showFib=false, showVwap=false;
 let pivotLines=[], fibLines=[], vwapLine=null;
-let watchlist = JSON.parse(localStorage.getItem('asta-watchlist') || '[]');
+let watchlist = (function(){ try{ return JSON.parse(localStorage.getItem('asta-watchlist')||'[]')||[]; }catch(e){ return []; } })();
 let intradayData=null, confluenceData=null;
 
 // ── Init ───────────────────────────────────────────────────────────────────────
@@ -901,8 +901,8 @@ function buildTable(rows,isTop,mode='') {
     const chg5d = r.change_5d != null ? r.change_5d : null;
     const chg5dStr = chg5d != null ? `<span class="${chg5d>=0?'pos':'neg'}">${chg5d>=0?'+':''}${chg5d.toFixed(1)}%</span>` : '–';
     return`
-    <tr class="${isTop?'top-row':''}" onclick="if(!event.target.closest('.wl-star'))openDetail('${r.symbol}')">
-      <td><button class="wl-star ${inWl?'on':''}" onclick="toggleWatchlist('${r.symbol}',this)" title="${inWl?'Remove from watchlist':'Add to watchlist'}">${inWl?'★':'☆'}</button></td>
+    <tr class="${isTop?'top-row':''}" onclick="if(!event.target.closest('[data-wl]'))openDetail('${r.symbol}')">
+      <td><button class="wl-star ${inWl?'on':''}" data-wl="${r.symbol}" title="${inWl?'Remove from watchlist':'Add to watchlist'}">${inWl?'★':'☆'}</button></td>
       <td style="color:var(--text3);font-weight:700">${i+1}</td>
       <td class="sym">${r.symbol}</td>
       <td><span class="sec-chip" style="background:${r.sector_color}22;color:${r.sector_color}">${r.sector}</span></td>
@@ -1946,7 +1946,30 @@ function renderBreadth(b) {
   set('brHighs', b.new_52w_highs || 0);
 }
 
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  let t = document.getElementById('_toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '_toast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#58a6ff;color:#000;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:opacity .2s';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => { t.style.opacity = '0'; }, 2000);
+}
+
 // ── Watchlist ─────────────────────────────────────────────────────────────────
+// Delegated click handler for star buttons (data-wl attribute)
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-wl]');
+  if (!btn) return;
+  e.stopPropagation();
+  toggleWatchlist(btn.dataset.wl, btn);
+});
+
 function saveWatchlist() {
   localStorage.setItem('asta-watchlist', JSON.stringify(watchlist));
   const badge = document.getElementById('wlBadge');
@@ -1957,8 +1980,15 @@ function saveWatchlist() {
 
 function toggleWatchlist(symbol, btn) {
   const idx = watchlist.indexOf(symbol);
-  if (idx >= 0) { watchlist.splice(idx, 1); if(btn){btn.textContent='☆';btn.classList.remove('on');} }
-  else { watchlist.push(symbol); if(btn){btn.textContent='★';btn.classList.add('on');} }
+  if (idx >= 0) {
+    watchlist.splice(idx, 1);
+    if (btn) { btn.textContent='☆'; btn.classList.remove('on'); }
+    showToast('Removed from watchlist');
+  } else {
+    watchlist.push(symbol);
+    if (btn) { btn.textContent='★'; btn.classList.add('on'); }
+    showToast('★ Added: ' + symbol);
+  }
   saveWatchlist();
   if (activeTab === 'watchlist') renderWatchlist();
 }
@@ -1983,8 +2013,8 @@ function renderWatchlist() {
   }
   const rows = watchlist.map(sym => {
     const r = allResults.find(x => x.symbol === sym);
-    if (!r) return `<tr onclick="openDetail('${sym}')"><td class="sym">${sym}</td><td colspan="9" style="color:var(--text3)">Run a scan to see live data</td><td onclick="event.stopPropagation()"><button class="wl-star on" onclick="toggleWatchlist('${sym}',this)">★</button></td></tr>`;
-    return `<tr onclick="openDetail('${r.symbol}')">
+    if (!r) return `<tr onclick="openDetail('${sym}')"><td class="sym">${sym}</td><td colspan="9" style="color:var(--text3)">Run a scan to see live data</td><td><button class="wl-star on" data-wl="${sym}">★</button></td></tr>`;
+    return `<tr onclick="if(!event.target.closest('[data-wl]'))openDetail('${r.symbol}')">
       <td class="sym">${r.symbol}</td>
       <td><span class="sec-chip" style="background:${r.sector_color}22;color:${r.sector_color}">${r.sector}</span></td>
       <td class="mono">${fmt(r.price)}</td>
@@ -1994,7 +2024,7 @@ function renderWatchlist() {
       <td>${scoreBar(r.score)}</td>
       <td>${sigDots(r)}</td>
       <td>${r.fo?'<span class="fo-badge">F&O</span>':''}</td>
-      <td onclick="event.stopPropagation()"><button class="wl-star on" onclick="toggleWatchlist('${r.symbol}',this)">★</button></td>
+      <td><button class="wl-star on" data-wl="${r.symbol}">★</button></td>
     </tr>`;
   }).join('');
   el.innerHTML = `<div class="tbl-wrap" style="margin:14px 16px"><table>
@@ -2004,20 +2034,15 @@ function renderWatchlist() {
 
 function addToWatchlistManual() {
   const input = document.getElementById('wlAddInput');
-  if (!input) return;
-  const raw = input.value.trim().toUpperCase();
-  if (!raw) return;
-  // Support comma or space-separated list
+  const raw = input ? input.value.trim().toUpperCase() : '';
+  if (!raw) { showToast('Type a symbol first'); return; }
   const syms = raw.split(/[\s,]+/).filter(Boolean);
   let added = 0;
-  syms.forEach(sym => {
-    if (!watchlist.includes(sym)) { watchlist.push(sym); added++; }
-  });
-  input.value = '';
-  if (added) { saveWatchlist(); renderWatchlist(); }
-  // Flash feedback
-  input.placeholder = added ? `Added ${syms.join(', ')}` : 'Already in watchlist';
-  setTimeout(() => { input.placeholder = 'Add symbol… e.g. INFY, BEL'; }, 2000);
+  syms.forEach(sym => { if (!watchlist.includes(sym)) { watchlist.push(sym); added++; } });
+  if (input) input.value = '';
+  saveWatchlist();
+  renderWatchlist();
+  showToast(added ? '★ Added: ' + syms.slice(0,3).join(', ') : 'Already in watchlist');
 }
 
 function clearWatchlist() {
