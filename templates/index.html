@@ -2034,8 +2034,13 @@ function renderWatchlist() {
 
 function addToWatchlistManual() {
   const input = document.getElementById('wlAddInput');
-  const raw = input ? input.value.trim().toUpperCase() : '';
-  if (!raw) { showToast('Type a symbol first'); return; }
+  let raw = input ? input.value.trim().toUpperCase() : '';
+  if (!raw) {
+    // Fallback: use prompt if input is empty or invisible
+    const p = window.prompt('Enter symbol(s) to add:\n(e.g. INFY  or  INFY,BEL,TCS)');
+    if (!p) return;
+    raw = p.trim().toUpperCase();
+  }
   const syms = raw.split(/[\s,]+/).filter(Boolean);
   let added = 0;
   syms.forEach(sym => { if (!watchlist.includes(sym)) { watchlist.push(sym); added++; } });
