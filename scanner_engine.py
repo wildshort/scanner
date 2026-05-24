@@ -414,7 +414,7 @@ def fetch_chart_data(symbol: str, interval: str) -> dict | None:
         return None
 
 
-def run_scan(market: str = "nifty50", max_workers: int = 16) -> dict:
+def run_scan(market: str = "nifty50", max_workers: int = 8) -> dict:
     symbols = MARKETS.get(market, MARKETS["nifty50"])["symbols"]
 
     # Fetch Nifty returns once for RS calculation

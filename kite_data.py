@@ -4,9 +4,16 @@ No Kite Connect dependency — safe to run without any API credentials.
 """
 import datetime
 import logging
+import time
+import threading
 import pandas as pd
 
 logger = logging.getLogger(__name__)
+
+# ── In-process OHLCV cache (avoids re-fetching same symbol within 10 min) ────
+_ohlcv_cache: dict = {}
+_ohlcv_lock = threading.Lock()
+_OHLCV_TTL = 600  # 10 minutes
 
 _INTERVAL_CFG = {
     "5m":  ("5m",   "5d",   None),
@@ -41,35 +48,46 @@ def _is_market_open() -> bool:
     return datetime.time(9, 15) <= t <= datetime.time(15, 30)
 
 
-def _yf_ohlcv(symbol: str, days: int = 365) -> pd.DataFrame:
+def _yf_fetch(sym: str, interval: str, period: str, retries: int = 3) -> pd.DataFrame:
+    """Fetch from yfinance with retry + backoff. Uses in-process cache."""
     import yfinance as yf
+    cache_key = f"{sym}_{interval}_{period}"
+    with _ohlcv_lock:
+        cached = _ohlcv_cache.get(cache_key)
+        if cached and time.time() - cached[0] < _OHLCV_TTL:
+            return cached[1]
+    for attempt in range(retries):
+        try:
+            df = yf.Ticker(sym).history(period=period, interval=interval)
+            if df is None or df.empty:
+                return pd.DataFrame()
+            df.columns = [c.lower() for c in df.columns]
+            df.index = pd.to_datetime(df.index).tz_convert(None)
+            result = df[["open", "high", "low", "close", "volume"]]
+            with _ohlcv_lock:
+                _ohlcv_cache[cache_key] = (time.time(), result)
+            return result
+        except Exception as e:
+            err = str(e)
+            if "rate" in err.lower() or "429" in err or "too many" in err.lower():
+                wait = 2 ** attempt * 3  # 3s, 6s, 12s
+                logger.warning(f"yfinance rate limit for {sym}, retrying in {wait}s")
+                time.sleep(wait)
+            else:
+                logger.debug(f"yfinance failed for {sym} ({interval}): {e}")
+                return pd.DataFrame()
+    return pd.DataFrame()
+
+
+def _yf_ohlcv(symbol: str, days: int = 365) -> pd.DataFrame:
     sym = symbol + ".NS" if "." not in symbol else symbol
-    try:
-        period = "1y" if days >= 365 else ("6mo" if days >= 180 else "3mo")
-        df = yf.Ticker(sym).history(period=period, interval="1d")
-        if df is None or df.empty:
-            return pd.DataFrame()
-        df.columns = [c.lower() for c in df.columns]
-        df.index = pd.to_datetime(df.index).tz_convert(None)
-        return df[["open", "high", "low", "close", "volume"]]
-    except Exception as e:
-        logger.debug(f"yfinance failed for {symbol}: {e}")
-        return pd.DataFrame()
+    period = "2y" if days >= 365 else ("6mo" if days >= 180 else "3mo")
+    return _yf_fetch(sym, "1d", period)
 
 
 def _yf_ohlcv_interval(symbol: str, yf_interval: str, period: str) -> pd.DataFrame:
-    import yfinance as yf
     sym = symbol + ".NS" if "." not in symbol else symbol
-    try:
-        df = yf.Ticker(sym).history(period=period, interval=yf_interval)
-        if df is None or df.empty:
-            return pd.DataFrame()
-        df.columns = [c.lower() for c in df.columns]
-        df.index = pd.to_datetime(df.index).tz_convert(None)
-        return df[["open", "high", "low", "close", "volume"]]
-    except Exception as e:
-        logger.debug(f"yfinance interval {yf_interval} failed for {symbol}: {e}")
-        return pd.DataFrame()
+    return _yf_fetch(sym, yf_interval, period)
 
 
 def get_ohlcv(symbol: str, interval: str = "day", days: int = 365) -> pd.DataFrame:
