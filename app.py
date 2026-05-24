@@ -70,6 +70,18 @@ async def markets():
     return _j({k: {"name": v["name"], "count": len(v["symbols"])} for k, v in MARKETS.items()})
 
 
+@app.get("/api/symbols")
+async def symbols():
+    """Return all known symbols with name/sector for autocomplete — no scan needed."""
+    from universe import STOCK_META, SECTOR_COLORS
+    data = [
+        {"symbol": sym, "name": meta[1], "sector": meta[0],
+         "sector_color": SECTOR_COLORS.get(meta[0], "#8b949e")}
+        for sym, meta in STOCK_META.items()
+    ]
+    return _j({"symbols": data, "total": len(data)})
+
+
 @app.get("/api/scan/{market}")
 async def scan(market: str, force: bool = False):
     import logging as _log

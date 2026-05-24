@@ -720,6 +720,7 @@ let showPivot=false, showFib=false, showVwap=false;
 let pivotLines=[], fibLines=[], vwapLine=null;
 let watchlist = (function(){ try{ return JSON.parse(localStorage.getItem('asta-watchlist')||'[]')||[]; }catch(e){ return []; } })();
 let intradayData=null, confluenceData=null;
+let _symbolPool = [];  // full Nifty 500 symbol list for autocomplete
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 async function init() {
@@ -729,6 +730,8 @@ async function init() {
     renderMarkets();
   } catch(e) {}
   loadFiiDii();
+  // Pre-load full symbol pool for watchlist autocomplete
+  fetch('/api/symbols').then(r=>r.json()).then(d=>{ _symbolPool = d.symbols||[]; }).catch(()=>{});
 }
 
 function renderMarkets() {
@@ -2061,8 +2064,8 @@ function wlAcInput(inp) {
   const rect = inp.getBoundingClientRect();
   dd.style.top = (rect.bottom + 4) + 'px';
   dd.style.left = rect.left + 'px';
-  // Match against scanned symbols and names
-  const pool = allResults.length ? allResults : [];
+  // Use full 500-stock pool; fall back to scan results if pool not loaded yet
+  const pool = _symbolPool.length ? _symbolPool : allResults;
   const matches = pool.filter(r =>
     r.symbol.startsWith(q) || (r.name||'').toUpperCase().includes(q)
   ).slice(0, 10);
