@@ -291,6 +291,20 @@ async def clear():
     return _j({"ok": True})
 
 
+_js_errors: list = []
+
+@app.post("/api/js-error")
+async def js_error(body: dict = Body(...)):
+    import logging
+    _js_errors.append(body)
+    logging.getLogger(__name__).error(f"JS ERROR: {body}")
+    return _j({"ok": True})
+
+@app.get("/api/js-errors")
+async def get_js_errors():
+    return _j({"errors": _js_errors})
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=8888, reload=False)

@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ASTA Scanner</title>
 <script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+window._jsErrors=[];
+window.onerror=function(msg,src,line,col,err){
+  var e={msg:msg,src:src,line:line,col:col,stack:err&&err.stack||''};
+  window._jsErrors.push(e);
+  fetch('/api/js-error',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(e)}).catch(function(){});
+};
+window.onunhandledrejection=function(e){
+  var err={msg:'UnhandledRejection: '+(e.reason&&e.reason.message||e.reason),stack:e.reason&&e.reason.stack||''};
+  window._jsErrors.push(err);
+  fetch('/api/js-error',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(err)}).catch(function(){});
+};
+</script>
 <style>
 :root{
   --bg:#0d1117;--bg2:#161b22;--bg3:#21262d;--border:#30363d;
@@ -528,12 +541,16 @@ td{padding:8px 11px;white-space:nowrap}
   <div class="tab-panel" id="panel-watchlist">
     <div class="stats" style="padding:8px 18px;gap:10px;align-items:center">
       <div><div class="sv blue" id="wlCount">0</div><div class="sl2">Stocks</div></div>
-      <div style="margin-left:16px;display:flex;align-items:center;gap:6px">
+      <div style="margin-left:16px;display:flex;align-items:center;gap:6px;position:relative">
         <span style="font-size:11px;color:var(--text3);white-space:nowrap">Add symbol:</span>
-        <input id="wlAddInput" type="text" placeholder="e.g. INFY or INFY,BEL,TCS"
-               style="width:220px;font-size:12px;padding:5px 8px;border-radius:4px;border:1px solid var(--blue);background:#1c2128;color:var(--text);outline:none;text-transform:uppercase"
-               oninput="this.value=this.value.toUpperCase()"
-               onkeydown="if(event.key==='Enter')addToWatchlistManual()">
+        <div style="position:relative">
+          <input id="wlAddInput" type="text" placeholder="Type to search… e.g. REL, HDFC"
+                 style="width:220px;font-size:12px;padding:5px 8px;border-radius:4px;border:1px solid var(--blue);background:#1c2128;color:var(--text);outline:none;text-transform:uppercase"
+                 oninput="wlAcInput(this)"
+                 onkeydown="wlAcKey(event)"
+                 autocomplete="off">
+          <div id="wlDropdown" style="display:none;position:absolute;top:100%;left:0;width:260px;background:var(--bg3);border:1px solid var(--blue);border-radius:4px;z-index:500;margin-top:2px;max-height:220px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.5)"></div>
+        </div>
         <button class="btn btn-blue" style="padding:5px 14px;font-size:12px;white-space:nowrap" onclick="addToWatchlistManual()">+ Add</button>
       </div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
@@ -2032,15 +2049,97 @@ function renderWatchlist() {
     <tbody>${rows}</tbody></table></div>`;
 }
 
+// ── Watchlist Autocomplete ────────────────────────────────────────────────────
+let _wlAcIdx = -1;
+
+function wlAcInput(inp) {
+  inp.value = inp.value.toUpperCase();
+  const q = inp.value.trim();
+  const dd = document.getElementById('wlDropdown');
+  if (!q || q.includes(',')) { dd.style.display='none'; return; }
+  // Match against scanned symbols and names
+  const pool = allResults.length ? allResults : [];
+  const matches = pool.filter(r =>
+    r.symbol.startsWith(q) || (r.name||'').toUpperCase().includes(q)
+  ).slice(0, 10);
+  if (!matches.length) { dd.style.display='none'; return; }
+  _wlAcIdx = -1;
+  dd.innerHTML = matches.map((r,i) =>
+    `<div class="wl-ac-item" data-sym="${r.symbol}" data-i="${i}"
+       style="padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px"
+       onmousedown="wlAcPick('${r.symbol}')"
+       onmouseenter="wlAcHover(${i})">
+       <span style="font-weight:700;color:var(--text)">${r.symbol}</span>
+       <span style="color:var(--text3);font-size:11px">${r.name||''}</span>
+       <span style="margin-left:auto;font-size:10px;color:${r.change_pct>=0?'var(--green)':'var(--red)'}">${r.change_pct>=0?'+':''}${(r.change_pct||0).toFixed(1)}%</span>
+     </div>`
+  ).join('');
+  dd.style.display = 'block';
+}
+
+function wlAcHover(i) {
+  _wlAcIdx = i;
+  document.querySelectorAll('.wl-ac-item').forEach((el,j) =>
+    el.style.background = j===i ? 'var(--bg2)' : '');
+}
+
+function wlAcKey(e) {
+  const dd = document.getElementById('wlDropdown');
+  const items = dd.querySelectorAll('.wl-ac-item');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _wlAcIdx = Math.min(_wlAcIdx+1, items.length-1);
+    items.forEach((el,j) => el.style.background = j===_wlAcIdx ? 'var(--bg2)' : '');
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _wlAcIdx = Math.max(_wlAcIdx-1, 0);
+    items.forEach((el,j) => el.style.background = j===_wlAcIdx ? 'var(--bg2)' : '');
+  } else if (e.key === 'Enter') {
+    if (_wlAcIdx >= 0 && items[_wlAcIdx]) {
+      e.preventDefault();
+      wlAcPick(items[_wlAcIdx].dataset.sym);
+    } else {
+      dd.style.display = 'none';
+      addToWatchlistManual();
+    }
+  } else if (e.key === 'Escape') {
+    dd.style.display = 'none';
+  }
+}
+
+function wlAcPick(sym) {
+  const dd = document.getElementById('wlDropdown');
+  dd.style.display = 'none';
+  const inp = document.getElementById('wlAddInput');
+  if (inp) inp.value = '';
+  if (!watchlist.includes(sym)) {
+    watchlist.push(sym);
+    saveWatchlist();
+    renderWatchlist();
+    showToast('★ Added: ' + sym);
+  } else {
+    showToast('Already in watchlist: ' + sym);
+  }
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#wlAddInput') && !e.target.closest('#wlDropdown')) {
+    const dd = document.getElementById('wlDropdown');
+    if (dd) dd.style.display = 'none';
+  }
+});
+
 function addToWatchlistManual() {
   const input = document.getElementById('wlAddInput');
   let raw = input ? input.value.trim().toUpperCase() : '';
   if (!raw) {
-    // Fallback: use prompt if input is empty or invisible
     const p = window.prompt('Enter symbol(s) to add:\n(e.g. INFY  or  INFY,BEL,TCS)');
     if (!p) return;
     raw = p.trim().toUpperCase();
   }
+  const dd = document.getElementById('wlDropdown');
+  if (dd) dd.style.display = 'none';
   const syms = raw.split(/[\s,]+/).filter(Boolean);
   let added = 0;
   syms.forEach(sym => { if (!watchlist.includes(sym)) { watchlist.push(sym); added++; } });
