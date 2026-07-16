@@ -211,7 +211,54 @@ td{padding:8px 11px;white-space:nowrap}
 .p-close{background:var(--bg3);border:1px solid var(--border);color:var(--text);width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .panel-main{flex:1;display:flex;overflow:hidden;min-height:0}
 .chart-col{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
-#priceChartDiv{flex:1;min-height:0}
+#priceChartDiv{flex:1;min-height:0;position:relative}
+/* ── TV-style chart legend (top-left overlay) ── */
+.tv-legend{position:absolute;top:8px;left:12px;z-index:5;font-family:'Trebuchet MS',sans-serif;font-size:11px;line-height:1.45;color:var(--text);pointer-events:none;user-select:none;text-shadow:0 0 4px var(--bg)}
+.tv-legend .ll{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline}
+.tv-legend .lhead{font-size:13px;font-weight:700;color:var(--text);letter-spacing:.2px}
+.tv-legend .lhead .ld-int{font-size:10px;color:var(--text2);font-weight:600;margin-left:6px;padding:1px 5px;border:1px solid var(--border);border-radius:3px;background:rgba(0,0,0,.25)}
+.tv-legend .lohlc{font-family:'SF Mono',monospace}
+.tv-legend .lohlc .lk{color:var(--text3);margin-right:2px}
+.tv-legend .lohlc .lv{font-weight:700}
+.tv-legend .lv.up{color:#26a69a}
+.tv-legend .lv.dn{color:#ef5350}
+.tv-legend .lind{display:flex;flex-wrap:wrap;gap:9px;font-family:'SF Mono',monospace;font-size:10px;color:var(--text2)}
+.tv-legend .lind span{padding:1px 4px;border-radius:2px}
+/* ── TV-style range pills (bottom of price chart) ── */
+.tv-range{position:absolute;bottom:6px;right:46px;z-index:5;display:flex;gap:3px;background:rgba(19,23,34,.7);border:1px solid var(--border);border-radius:5px;padding:2px;backdrop-filter:blur(6px)}
+[data-theme="light"] .tv-range{background:rgba(255,255,255,.85)}
+.tv-range button{background:transparent;border:none;color:var(--text2);font-size:10px;font-weight:700;padding:3px 7px;border-radius:3px;cursor:pointer;font-family:'Trebuchet MS',sans-serif}
+.tv-range button:hover{color:var(--text);background:var(--bg3)}
+.tv-range button.active{background:#2962ff;color:#fff}
+/* ── Indicators dropdown menu ── */
+.ind-menu-wrap{position:relative}
+.ind-menu-btn{display:flex;align-items:center;gap:5px;padding:4px 9px !important;font-size:11px;font-weight:700}
+.ind-menu-btn.open{border-color:#2962ff;color:#2962ff}
+.ind-menu{display:none;position:absolute;top:calc(100% + 5px);right:0;width:260px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:8px;z-index:9500;box-shadow:0 6px 24px rgba(0,0,0,.55)}
+.ind-menu.open{display:block}
+.ind-menu-sec{padding:6px 4px;border-bottom:1px solid var(--border)}
+.ind-menu-sec:last-child{border-bottom:none}
+.ind-menu-row{display:flex;gap:4px;align-items:center}
+.ind-menu-sel{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:11px;padding:4px 6px;border-radius:4px;font-family:'Trebuchet MS',sans-serif}
+.ind-menu-sel:focus{outline:none;border-color:#2962ff}
+.ind-menu-act{background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:12px;padding:3px 7px;border-radius:4px;cursor:pointer}
+.ind-menu-act:hover{color:var(--text);border-color:#2962ff}
+.ind-menu-h{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:700;margin-bottom:5px;padding:0 2px;display:flex;justify-content:space-between;align-items:baseline}
+.ind-menu-opt{display:flex;align-items:center;gap:6px;padding:4px 6px;font-size:11px;color:var(--text);cursor:pointer;border-radius:4px}
+.ind-menu-opt:hover{background:var(--bg3)}
+.ind-menu-opt input{accent-color:#2962ff;cursor:pointer}
+/* ── In-chart symbol search ── */
+.tv-search{position:relative;display:flex;align-items:center}
+.tv-search input{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:4px 9px;font-size:11px;width:130px;font-family:'Trebuchet MS',sans-serif;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.tv-search input:focus{outline:none;border-color:#2962ff;width:170px;transition:width .15s}
+.tv-search .tv-search-icon{position:absolute;right:6px;color:var(--text3);font-size:10px;pointer-events:none}
+.tv-search-drop{display:none;position:absolute;top:100%;left:0;width:200px;max-height:240px;overflow-y:auto;background:var(--bg2);border:1px solid var(--border);border-radius:5px;margin-top:3px;z-index:9000;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.tv-search-drop.show{display:block}
+.tv-search-drop .tv-search-item{padding:5px 9px;font-size:11px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:8px}
+.tv-search-drop .tv-search-item:last-child{border:none}
+.tv-search-drop .tv-search-item:hover,.tv-search-drop .tv-search-item.sel{background:var(--bg3)}
+.tv-search-drop .tv-search-item .ts-sym{color:var(--blue);font-weight:700}
+.tv-search-drop .tv-search-item .ts-sec{color:var(--text3);font-size:9px}
 #indChartDiv{height:110px;flex-shrink:0}
 #ind2ChartDiv{height:100px;flex-shrink:0}
 #rsiChartDiv{height:100px;flex-shrink:0}
@@ -594,6 +641,18 @@ td{padding:8px 11px;white-space:nowrap}
     </div>
     <!-- Timeline + indicator mode + drawing tools in header -->
     <div style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:nowrap">
+      <!-- TV-style in-chart symbol search -->
+      <div class="tv-search">
+        <input id="tvSearchInp" type="text" placeholder="Symbol…"
+               oninput="tvSearchInput(this)"
+               onkeydown="tvSearchKey(event)"
+               onfocus="tvSearchInput(this)"
+               onblur="setTimeout(()=>document.getElementById('tvSearchDrop').classList.remove('show'),150)"
+               autocomplete="off" spellcheck="false">
+        <span class="tv-search-icon">⌕</span>
+        <div class="tv-search-drop" id="tvSearchDrop"></div>
+      </div>
+      <span style="color:var(--border)">│</span>
       <div class="tl-btns">
         <button class="tl-btn" onclick="setTl('5m',this)">5m</button>
         <button class="tl-btn" onclick="setTl('10m',this)">10m</button>
@@ -606,17 +665,46 @@ td{padding:8px 11px;white-space:nowrap}
         <button class="tl-btn" onclick="setTl('1mo',this)">M</button>
       </div>
       <span style="color:var(--border)">│</span>
-      <!-- Indicator mode buttons -->
-      <div class="overlay-btns" title="Indicator Panels">
-        <button class="ov-btn" id="ind-U" onclick="setIndMode('U',this)" title="BB + DMI + RSI(70/30)">U</button>
-        <button class="ov-btn" id="ind-S" onclick="setIndMode('S',this)" title="MACD + Stochastic + RSI(60/40)">S</button>
-      </div>
-      <span style="color:var(--border)">│</span>
-      <!-- Overlay toggles: Pivot, Fib, VWAP -->
-      <div class="overlay-btns" title="Overlays">
-        <button class="ov-btn" id="ov-pivot" onclick="togPivot(this)" title="Pivot Points (PP/R1/R2/S1/S2)">PP</button>
-        <button class="ov-btn" id="ov-fib" onclick="togFib(this)" title="Fibonacci Retracement (52W)">Fib</button>
-        <button class="ov-btn" id="ov-vwap" onclick="togVwap(this)" title="VWAP (intraday only)">VWAP</button>
+      <!-- Indicators dropdown (replaces U/S/PP/Fib/VWAP) -->
+      <div class="ind-menu-wrap">
+        <button class="ov-btn ind-menu-btn" id="indMenuBtn" onclick="toggleIndMenu(event)" title="Indicators &amp; saved groups">
+          <span style="font-size:12px">📊</span>
+          <span id="indMenuLabel">Clean</span>
+          <span style="font-size:8px;opacity:.6">▼</span>
+        </button>
+        <div id="indMenu" class="ind-menu" onclick="event.stopPropagation()">
+          <div class="ind-menu-sec">
+            <div class="ind-menu-row">
+              <select id="indGroupSel" class="ind-menu-sel" onchange="applyGroupFromSel(this)">
+                <option value="">— Load group —</option>
+              </select>
+              <button class="ind-menu-act" onclick="saveGroupPrompt()" title="Save current as new group">💾</button>
+              <button class="ind-menu-act" onclick="deleteCurrentGroup()" title="Delete current saved group">🗑</button>
+              <button class="ind-menu-act" onclick="applyGroup({name:'Clean', ind:BUILTIN_GROUPS[0].ind})" title="Reset to Clean">↺</button>
+            </div>
+          </div>
+          <div class="ind-menu-sec">
+            <div class="ind-menu-h">OVERLAYS</div>
+            <label class="ind-menu-opt"><input type="checkbox" data-ind="bb"    onchange="toggleInd(this)"><span style="color:#2962ff">●</span> Bollinger Bands</label>
+            <label class="ind-menu-opt"><input type="checkbox" data-ind="ema5"  onchange="toggleInd(this)"><span style="color:#f7a800">●</span> EMA 5</label>
+            <label class="ind-menu-opt"><input type="checkbox" data-ind="ema50" onchange="toggleInd(this)"><span style="color:#2962ff">●</span> EMA 50</label>
+            <label class="ind-menu-opt"><input type="checkbox" data-ind="st"    onchange="toggleInd(this)"><span style="color:#26a69a">●</span> Supertrend</label>
+            <label class="ind-menu-opt"><input type="checkbox" data-ind="vwap"  onchange="toggleInd(this)"><span style="color:#bc8cff">●</span> VWAP <span style="color:var(--text3);font-size:9px">(intraday)</span></label>
+            <label class="ind-menu-opt"><input type="checkbox" data-ind="pivot" onchange="toggleInd(this)"><span style="color:#e3b341">●</span> Pivot Points</label>
+            <label class="ind-menu-opt"><input type="checkbox" data-ind="fib"   onchange="toggleInd(this)"><span style="color:#f97316">●</span> Fibonacci</label>
+            <label class="ind-menu-opt"><input type="checkbox" data-ind="div"   onchange="toggleInd(this)"><span style="color:#f23645">●</span> RSI Divergence <span style="color:var(--text3);font-size:9px">(1D · 4H)</span></label>
+            <label class="ind-menu-opt"><input type="checkbox" data-ind="rsi"   onchange="toggleInd(this)"><span style="color:#bc8cff">●</span> RSI <span style="color:var(--text3);font-size:9px">(overlay band)</span></label>
+          </div>
+          <div class="ind-menu-sec">
+            <div class="ind-menu-h">LOWER PANELS <span style="color:var(--text3);font-size:9px;font-weight:400">(max 2)</span></div>
+            <label class="ind-menu-opt"><input type="checkbox" data-ind="macd"  onchange="toggleInd(this)"><span style="color:#58a6ff">●</span> MACD</label>
+            <label class="ind-menu-opt"><input type="checkbox" data-ind="stoch" onchange="toggleInd(this)"><span style="color:#58a6ff">●</span> Stochastic</label>
+            <label class="ind-menu-opt"><input type="checkbox" data-ind="dmi"   onchange="toggleInd(this)"><span style="color:#e3b341">●</span> DMI / ADX</label>
+          </div>
+          <div class="ind-menu-sec">
+            <label class="ind-menu-opt"><input type="checkbox" data-ind="vol"   onchange="toggleInd(this)"><span style="color:#58a6ff">●</span> Volume</label>
+          </div>
+        </div>
       </div>
       <span style="color:var(--border)">│</span>
       <!-- Drawing tools -->
@@ -704,8 +792,9 @@ function toggleTheme(){
   const d = document.getElementById('detailPanel')._d;
   if(d && document.getElementById('detailPanel').classList.contains('open')){
     destroyCharts();
+    showPivot = !!indicators.pivot; showFib = !!indicators.fib; showVwap = !!indicators.vwap;
     const ohlc = d._ic && d._ic[currentTl];
-    if(ohlc) buildLightweightChart(d, currentTl, ohlc);
+    if(ohlc) { buildLightweightChart(d, currentTl, ohlc); _postBuildOverlays(); }
   }
 }
 
@@ -719,6 +808,30 @@ let chartInstances=[];
 let drawMode='cursor', drawings=[], tlClickPts=[], pMainChart=null, pMainSeries=null;
 let showPivot=false, showFib=false, showVwap=false;
 let pivotLines=[], fibLines=[], vwapLine=null;
+
+// ── Indicator state ───────────────────────────────────────────────────────────
+// Each flag toggles a chart element. Default = clean (just candles + volume).
+const DEFAULT_IND = {
+  bb:false, ema5:false, ema50:false, st:false,
+  vwap:false, pivot:false, fib:false, vol:true,
+  rsi:false, macd:false, stoch:false, dmi:false,
+  div:true,
+};
+const BUILTIN_GROUPS = [
+  {name:'Clean',     ind:{vol:true}},
+  {name:'Trend',     ind:{bb:true, ema5:true, ema50:true, st:true, rsi:true, vol:true}},
+  {name:'Momentum',  ind:{ema5:true, macd:true, stoch:true, rsi:true, vol:true}},
+  {name:'ASTA U',    ind:{bb:true, ema5:true, ema50:true, st:true, dmi:true, rsi:true, vol:true}},
+  {name:'ASTA S',    ind:{ema5:true, ema50:true, macd:true, stoch:true, rsi:true, vol:true}},
+  {name:'All-Indicators', ind:{bb:true, ema5:true, ema50:true, st:true, rsi:true, macd:true, stoch:true, dmi:true, vol:true}},
+];
+function _loadInd(){ try { const s=JSON.parse(localStorage.getItem('asta-ind')||'null'); return s ? {...DEFAULT_IND, ...s} : {...DEFAULT_IND}; } catch(e){ return {...DEFAULT_IND}; } }
+function _saveInd(){ try { localStorage.setItem('asta-ind', JSON.stringify(indicators)); } catch(e){} }
+function _loadUserGroups(){ try { return JSON.parse(localStorage.getItem('asta-ind-groups')||'[]')||[]; } catch(e){ return []; } }
+function _saveUserGroups(){ try { localStorage.setItem('asta-ind-groups', JSON.stringify(userGroups)); } catch(e){} }
+let indicators = _loadInd();
+let userGroups = _loadUserGroups();
+let activeGroupName = localStorage.getItem('asta-ind-group-name') || 'Clean';
 let watchlist = (function(){ try{ return JSON.parse(localStorage.getItem('asta-watchlist')||'[]')||[]; }catch(e){ return []; } })();
 let intradayData=null, confluenceData=null;
 let _symbolPool = [];  // full Nifty 500 symbol list for autocomplete
@@ -733,6 +846,12 @@ async function init() {
   loadFiiDii();
   // Pre-load full symbol pool for watchlist autocomplete
   fetch('/api/symbols').then(r=>r.json()).then(d=>{ _symbolPool = d.symbols||[]; }).catch(()=>{});
+  // Initialize indicators menu label
+  try {
+    activeGroupName = inferGroupName() || activeGroupName;
+    const lbl = document.getElementById('indMenuLabel');
+    if(lbl) lbl.textContent = activeGroupName;
+  } catch(e){}
 }
 
 function renderMarkets() {
@@ -1079,24 +1198,171 @@ async function openDetail(symbol) {
   }
 }
 function closePanel(){document.getElementById('detailPanel').classList.remove('open');destroyCharts();}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
+document.addEventListener('keydown',e=>{
+  const isPanelOpen = document.getElementById('detailPanel').classList.contains('open');
+  // Ignore when typing in any input/textarea
+  const tag = (e.target && e.target.tagName) || '';
+  if(tag==='INPUT' || tag==='TEXTAREA' || (e.target && e.target.isContentEditable)) {
+    if(e.key==='Escape' && e.target) e.target.blur();
+    return;
+  }
+  if(e.key==='Escape') {
+    // First Esc: cancel drawing mode if active; second: close
+    if(drawMode!=='cursor') { setDrawMode('cursor', document.getElementById('dt-cursor')); tlClickPts=[]; return; }
+    if(isPanelOpen) closePanel();
+    return;
+  }
+  if(!isPanelOpen || !pMainChart) return;
+  const ts = pMainChart.timeScale();
+  const vr = ts.getVisibleLogicalRange && ts.getVisibleLogicalRange();
+  if(!vr) return;
+  const span = vr.to - vr.from;
+  const panBy = Math.max(1, Math.round(span*0.1));
+  const zoomBy = Math.max(1, Math.round(span*0.15));
+  if(e.key==='ArrowLeft') { e.preventDefault(); ts.setVisibleLogicalRange({from:vr.from-panBy, to:vr.to-panBy}); }
+  else if(e.key==='ArrowRight') { e.preventDefault(); ts.setVisibleLogicalRange({from:vr.from+panBy, to:vr.to+panBy}); }
+  else if(e.key==='+' || e.key==='=') { e.preventDefault(); ts.setVisibleLogicalRange({from:vr.from+zoomBy, to:vr.to-zoomBy}); }
+  else if(e.key==='-' || e.key==='_') { e.preventDefault(); ts.setVisibleLogicalRange({from:vr.from-zoomBy, to:vr.to+zoomBy}); }
+  else if(e.key==='Home') { e.preventDefault(); ts.fitContent(); }
+  else if(e.key==='End' || e.key===' ') { e.preventDefault(); ts.scrollToRealTime(); }
+  else if(e.key.toLowerCase()==='s') {
+    // S = focus symbol search
+    e.preventDefault();
+    const inp = document.getElementById('tvSearchInp');
+    if(inp) inp.focus();
+  }
+});
 async function scanCustom(){
   const sym=document.getElementById('customSym').value.trim().toUpperCase();
   if(!sym)return;
   await openDetail(sym);
 }
 
-async function setIndMode(mode, btn) {
-  const same = indMode===mode;
-  indMode = same ? null : mode;
-  document.querySelectorAll('#ind-U,#ind-S').forEach(b=>b.classList.remove('active'));
-  if(!same && btn) btn.classList.add('active');
-  const d=document.getElementById('detailPanel')._d;
-  if(d){
-    destroyCharts();
-    const ohlc=await getIntervalOhlc(d,currentTl);
-    if(ohlc) buildLightweightChart(d,currentTl,ohlc);
+// ── Indicators menu ──────────────────────────────────────────────────────────
+function toggleIndMenu(e){
+  if(e) e.stopPropagation();
+  const m = document.getElementById('indMenu');
+  const b = document.getElementById('indMenuBtn');
+  const wasOpen = m.classList.contains('open');
+  if(!wasOpen) {
+    refreshIndMenu();
+    m.classList.add('open');
+    b.classList.add('open');
+  } else {
+    m.classList.remove('open');
+    b.classList.remove('open');
   }
+}
+function closeIndMenu(){
+  document.getElementById('indMenu')?.classList.remove('open');
+  document.getElementById('indMenuBtn')?.classList.remove('open');
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.ind-menu-wrap')) closeIndMenu();
+});
+function refreshIndMenu(){
+  // Reflect current indicator state in checkboxes
+  document.querySelectorAll('#indMenu input[data-ind]').forEach(inp=>{
+    inp.checked = !!indicators[inp.dataset.ind];
+  });
+  // Rebuild group dropdown
+  const sel = document.getElementById('indGroupSel');
+  if(!sel) return;
+  const allGroups = [...BUILTIN_GROUPS, ...userGroups];
+  sel.innerHTML = '<option value="">— Load group —</option>'
+    + BUILTIN_GROUPS.map(g=>`<option value="b:${g.name}"${g.name===activeGroupName?' selected':''}>${g.name}</option>`).join('')
+    + (userGroups.length ? '<option value="" disabled>──── Saved ────</option>' : '')
+    + userGroups.map(g=>`<option value="u:${g.name}"${g.name===activeGroupName?' selected':''}>${g.name}</option>`).join('');
+  // Update label
+  document.getElementById('indMenuLabel').textContent = activeGroupName || 'Custom';
+}
+async function rebuildChartFromState(){
+  const d=document.getElementById('detailPanel')._d;
+  if(!d) return;
+  destroyCharts();
+  // Sync legacy globals (destroyCharts resets them) so drawPivotLines/etc. work
+  showPivot = !!indicators.pivot;
+  showFib   = !!indicators.fib;
+  showVwap  = !!indicators.vwap;
+  const ohlc=await getIntervalOhlc(d,currentTl);
+  if(ohlc) {
+    buildLightweightChart(d,currentTl,ohlc);
+    if(typeof _postBuildOverlays === 'function') _postBuildOverlays();
+  }
+}
+function toggleInd(inp){
+  indicators[inp.dataset.ind] = inp.checked;
+  // Selecting individual toggles → mark as Custom unless still matches a group
+  activeGroupName = inferGroupName();
+  localStorage.setItem('asta-ind-group-name', activeGroupName);
+  _saveInd();
+  refreshIndMenu();
+  rebuildChartFromState();
+}
+function indEqual(a,b){
+  const keys = Object.keys(DEFAULT_IND);
+  for(const k of keys) if(!!a[k] !== !!b[k]) return false;
+  return true;
+}
+function inferGroupName(){
+  const merged = name => { const g=[...BUILTIN_GROUPS,...userGroups].find(x=>x.name===name); return g ? {...DEFAULT_IND, ...g.ind} : null; };
+  for(const g of BUILTIN_GROUPS) if(indEqual(indicators, {...DEFAULT_IND, ...g.ind})) return g.name;
+  for(const g of userGroups)    if(indEqual(indicators, {...DEFAULT_IND, ...g.ind})) return g.name;
+  return 'Custom';
+}
+function applyGroup(g){
+  if(!g) return;
+  indicators = {...DEFAULT_IND, ...g.ind};
+  activeGroupName = g.name;
+  _saveInd();
+  localStorage.setItem('asta-ind-group-name', activeGroupName);
+  refreshIndMenu();
+  rebuildChartFromState();
+}
+function applyGroupFromSel(sel){
+  const v = sel.value;
+  if(!v) return;
+  const [src, name] = v.split(':');
+  const pool = src==='b' ? BUILTIN_GROUPS : userGroups;
+  const g = pool.find(x=>x.name===name);
+  if(g) applyGroup(g);
+}
+function saveGroupPrompt(){
+  const suggested = activeGroupName==='Custom' ? '' : activeGroupName;
+  const name = window.prompt('Save indicator group as:', suggested || 'My Group');
+  if(!name) return;
+  const trimmed = name.trim();
+  if(!trimmed) return;
+  if(BUILTIN_GROUPS.some(g=>g.name===trimmed)) {
+    showToast('Cannot overwrite built-in group: ' + trimmed);
+    return;
+  }
+  // Snapshot ONLY the true flags so future DEFAULT_IND changes don't bleed in
+  const snapshot = {};
+  Object.keys(indicators).forEach(k => { if(indicators[k]) snapshot[k] = true; });
+  const existing = userGroups.findIndex(g=>g.name===trimmed);
+  if(existing >= 0) userGroups[existing] = {name:trimmed, ind:snapshot};
+  else userGroups.push({name:trimmed, ind:snapshot});
+  _saveUserGroups();
+  activeGroupName = trimmed;
+  localStorage.setItem('asta-ind-group-name', activeGroupName);
+  refreshIndMenu();
+  showToast('✓ Saved group: ' + trimmed);
+}
+function deleteCurrentGroup(){
+  if(!activeGroupName || BUILTIN_GROUPS.some(g=>g.name===activeGroupName)) {
+    showToast('Cannot delete built-in groups');
+    return;
+  }
+  const idx = userGroups.findIndex(g=>g.name===activeGroupName);
+  if(idx < 0) { showToast('No saved group to delete'); return; }
+  if(!confirm('Delete saved group "'+activeGroupName+'"?')) return;
+  userGroups.splice(idx,1);
+  _saveUserGroups();
+  activeGroupName = inferGroupName();
+  localStorage.setItem('asta-ind-group-name', activeGroupName);
+  refreshIndMenu();
+  showToast('🗑 Deleted group');
 }
 
 function setDrawMode(mode, btn) {
@@ -1104,6 +1370,9 @@ function setDrawMode(mode, btn) {
   tlClickPts=[];
   document.querySelectorAll('#dt-cursor,#dt-hline,#dt-tline').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
+  // Cursor feedback while a drawing tool is active
+  const pDiv = document.getElementById('priceChartDiv');
+  if(pDiv) pDiv.style.cursor = (mode==='hline' || mode==='tline') ? 'crosshair' : 'default';
 }
 
 function clearDrawings() {
@@ -1196,7 +1465,9 @@ function renderDetail(d) {
   if (wlBtn) { const inWl=watchlist.includes(d.symbol); wlBtn.textContent=inWl?'★':'☆'; wlBtn.classList.toggle('on',inWl); }
   // Ensure 1d ohlc is cached, then build chart
   if(!d._ic) d._ic={'1d': d.ohlc||[]};
+  showPivot = !!indicators.pivot; showFib = !!indicators.fib; showVwap = !!indicators.vwap;
   buildLightweightChart(d, '1d', d.ohlc||[]);
+  _postBuildOverlays();
 }
 
 function stag(on,lbl){return`<div class="stag ${on?'on':'off'}">${on?'✓':'–'} ${lbl}</div>`;}
@@ -1230,7 +1501,8 @@ async function setTl(interval, btn) {
   destroyCharts();
   document.getElementById('priceChartDiv').innerHTML=`<div style="color:var(--text3);padding:30px;font-size:12px;text-align:center"><div class="spinner" style="margin:0 auto 10px"></div>Loading ${interval}…</div>`;
   const ohlc = await getIntervalOhlc(d, interval);
-  if(ohlc) buildLightweightChart(d, interval, ohlc);
+  showPivot = !!indicators.pivot; showFib = !!indicators.fib; showVwap = !!indicators.vwap;
+  if(ohlc) { buildLightweightChart(d, interval, ohlc); _postBuildOverlays(); }
 }
 
 // togOverlay removed — replaced by U/S mode buttons
@@ -1247,6 +1519,7 @@ async function getIntervalOhlc(d, interval) {
     if(!r.ok) throw new Error(r.status);
     const j = await r.json();
     d._ic[interval] = j.ohlc || [];
+    (d._divc || (d._divc = {}))[interval] = j.divergences || [];
     return d._ic[interval];
   } catch(e) {
     console.error('chart fetch failed', e);
@@ -1272,102 +1545,276 @@ function buildLightweightChart(d, interval, ohlc) {
   const i2Div = document.getElementById('ind2ChartDiv');
   if(!pDiv||!rDiv) return;
 
-  // Show/hide indicator panels based on mode
-  const showU = indMode==='U' && !isIntraday;
-  const showS = indMode==='S' && !isIntraday;
-  iDiv.style.display  = (showU||showS) ? 'block' : 'none';
-  i2Div.style.display = showS ? 'block' : 'none';
+  // Decide which lower panels to show. RSI has its own slot (rDiv).
+  // DMI/MACD/Stochastic share the two flexible slots (iDiv, i2Div) by priority.
+  const lowerQueue = [];
+  if(indicators.dmi)   lowerQueue.push('dmi');
+  if(indicators.macd)  lowerQueue.push('macd');
+  if(indicators.stoch) lowerQueue.push('stoch');
+  // Intraday: hide non-applicable lower indicators (kept original behavior)
+  const lowerActive = isIntraday ? [] : lowerQueue.slice(0,2);
+  const slot1 = lowerActive[0] || null;
+  const slot2 = lowerActive[1] || null;
+  iDiv.style.display  = slot1 ? 'block' : 'none';
+  i2Div.style.display = slot2 ? 'block' : 'none';
+  rDiv.style.display  = 'none';  // RSI now overlays the price chart (always aligned)
 
-  // RSI levels based on mode
-  const rsiOB = showS ? 60 : 70;
-  const rsiOS = showS ? 40 : 30;
+  // RSI levels (use scalper bands when momentum group active, else classic)
+  const useScalperRsi = indicators.macd && indicators.stoch;
+  const rsiOB = useScalperRsi ? 60 : 70;
+  const rsiOS = useScalperRsi ? 40 : 30;
 
   // Build a set of displayed times for trendline filtering
   const displayedTimes = new Set(ohlc.map(c=>c.time));
 
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-  const chartBg   = isLight ? '#ffffff' : '#0d1117';
-  const chartText = isLight ? '#656d76' : '#8b949e';
-  const chartGrid = isLight ? '#e8ecf0' : '#21262d';
+  // TradingView-style palette: slightly off-pure-black bg, soft grid, neutral border
+  const chartBg     = isLight ? '#ffffff' : '#131722';
+  const chartText   = isLight ? '#131722' : '#d1d4dc';
+  const chartGrid   = isLight ? '#e0e3eb' : '#1e222d';
+  const chartBorder = isLight ? '#c8c9cf' : '#2a2e39';
+  const watermarkClr= isLight ? 'rgba(19,23,34,.06)' : 'rgba(255,255,255,.05)';
 
   const chartOpts = {
-    layout:     {background:{color:chartBg}, textColor:chartText},
-    grid:       {vertLines:{color:chartGrid}, horzLines:{color:chartGrid}},
-    rightPriceScale: {borderColor:'#30363d', scaleMargins:{top:.04,bottom:.08}},
-    timeScale:  {borderColor:'#30363d', timeVisible:true, secondsVisible:false, rightOffset:5},
-    crosshair:  {mode: LightweightCharts.CrosshairMode.Normal},
+    layout: {
+      background:{color:chartBg},
+      textColor:chartText,
+      fontFamily:"'Trebuchet MS', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      fontSize:12,
+    },
+    grid: {
+      vertLines:{color:chartGrid, style:LightweightCharts.LineStyle.Solid},
+      horzLines:{color:chartGrid, style:LightweightCharts.LineStyle.Solid},
+    },
+    rightPriceScale: {
+      borderColor:chartBorder, scaleMargins:{top:.08,bottom:.18},
+      borderVisible:true,
+    },
+    timeScale: {
+      borderColor:chartBorder, timeVisible:true, secondsVisible:false, rightOffset:8,
+      barSpacing:8, minBarSpacing:2, fixLeftEdge:false, fixRightEdge:false,
+      lockVisibleTimeRangeOnResize:true,
+    },
+    crosshair: {
+      mode: LightweightCharts.CrosshairMode.Magnet,
+      vertLine:{width:1, color:'rgba(150,150,150,.6)', style:LightweightCharts.LineStyle.Solid, labelBackgroundColor:'#2962ff'},
+      horzLine:{width:1, color:'rgba(150,150,150,.6)', style:LightweightCharts.LineStyle.Solid, labelBackgroundColor:'#2962ff'},
+    },
     handleScroll:true, handleScale:true,
     autoSize:   true,
+    watermark: {
+      visible:true,
+      text:`${d.symbol||''}  ·  ${interval.toUpperCase()}`,
+      fontSize:54,
+      fontFamily:"'Trebuchet MS', sans-serif",
+      color:watermarkClr,
+      horzAlign:'center', vertAlign:'center',
+    },
+    localization: {
+      priceFormatter:p => p>=1000 ? p.toFixed(2) : p.toFixed(2),
+    },
   };
 
   // ── Price chart ──────────────────────────────────────────────────────────────
   const pChart = LightweightCharts.createChart(pDiv, chartOpts);
   chartInstances.push(pChart);
 
+  // TradingView-style legend overlay (top-left of price chart)
+  const legendEl = document.createElement('div');
+  legendEl.className = 'tv-legend';
+  // Build indicator legend lines only for enabled indicators
+  const indLines = [];
+  if(indicators.ema5)  indLines.push(`<span style="color:#f7a800">EMA5 <b id="lgE5">–</b></span>`);
+  if(indicators.ema50) indLines.push(`<span style="color:#2962ff">EMA50 <b id="lgE50">–</b></span>`);
+  if(indicators.bb)    indLines.push(`<span style="color:rgba(41,98,255,.85)">BB <b id="lgBB">–</b></span>`);
+  if(indicators.st)    indLines.push(`<span style="color:#26a69a" id="lgSTw">ST <b id="lgST">–</b></span>`);
+  if(indicators.rsi)   indLines.push(`<span style="color:#bc8cff">RSI <b id="lgR">–</b></span>`);
+  if(indicators.macd)  indLines.push(`<span style="color:#58a6ff">MACD <b id="lgMACD">–</b></span>`);
+  if(indicators.stoch) indLines.push(`<span style="color:#58a6ff">%K <b id="lgSK">–</b></span>`);
+  if(indicators.dmi)   indLines.push(`<span style="color:#e3b341">ADX <b id="lgADX">–</b></span>`);
+  const volLine = indicators.vol ? `<span><span class="lk">V</span><span class="lv" id="lgV" style="color:#58a6ff">–</span></span>` : '';
+  legendEl.innerHTML = `
+    <div class="lhead">${d.symbol||'—'}<span class="ld-int">${interval.toUpperCase()}</span><span class="ld-int" style="background:rgba(41,98,255,.15);border-color:#2962ff;color:#2962ff">${d.sector||''}</span></div>
+    <div class="ll lohlc">
+      <span><span class="lk">O</span><span class="lv" id="lgO">–</span></span>
+      <span><span class="lk">H</span><span class="lv" id="lgH">–</span></span>
+      <span><span class="lk">L</span><span class="lv" id="lgL">–</span></span>
+      <span><span class="lk">C</span><span class="lv" id="lgC">–</span></span>
+      <span><span class="lk">Δ</span><span class="lv" id="lgChg">–</span></span>
+      ${volLine}
+    </div>
+    ${indLines.length ? `<div class="lind">${indLines.join('')}</div>` : ''}`;
+  pDiv.appendChild(legendEl);
+
+  const fmtN = v => (v==null||isNaN(v)) ? '–' : (Math.abs(v) >= 1000 ? v.toFixed(2) : v.toFixed(2));
+  const fmtVol = v => {
+    if(v==null||isNaN(v)) return '–';
+    if(v>=1e7) return (v/1e7).toFixed(2)+'Cr';
+    if(v>=1e5) return (v/1e5).toFixed(2)+'L';
+    if(v>=1e3) return (v/1e3).toFixed(1)+'K';
+    return String(v);
+  };
+
+  function updateLegend(bar) {
+    if(!bar) return;
+    const $ = id => document.getElementById(id);
+    const set = (id, val) => { const el=$(id); if(el) el.textContent = val; };
+    if(!$('lgO')) return;
+    set('lgO', fmtN(bar.open));
+    set('lgH', fmtN(bar.high));
+    set('lgL', fmtN(bar.low));
+    set('lgC', fmtN(bar.close));
+    const up = bar.close >= bar.open;
+    ['lgO','lgH','lgL','lgC'].forEach(id => { const el=$(id); if(el) el.className = 'lv ' + (up?'up':'dn'); });
+    const chg = bar.open ? (bar.close-bar.open) : 0;
+    const chgPct = bar.open ? (chg/bar.open*100) : 0;
+    const chgEl = $('lgChg');
+    if(chgEl) {
+      chgEl.textContent = (chg>=0?'+':'') + chg.toFixed(2) + ' (' + (chg>=0?'+':'') + chgPct.toFixed(2) + '%)';
+      chgEl.className = 'lv ' + (chg>=0?'up':'dn');
+    }
+    set('lgV', fmtVol(bar.volume));
+    set('lgE5', fmtN(bar.ema5));
+    set('lgE50', fmtN(bar.ema50));
+    if($('lgBB')) {
+      if(bar.bb_upper!=null && bar.bb_lower!=null) {
+        $('lgBB').textContent = fmtN(bar.bb_lower) + '–' + fmtN(bar.bb_upper);
+      } else { $('lgBB').textContent = '–'; }
+    }
+    if($('lgST')) {
+      if(bar.st!=null) {
+        $('lgST').textContent = fmtN(bar.st);
+        const w = $('lgSTw'); if(w) w.style.color = bar.st_dir===1 ? '#26a69a' : '#ef5350';
+      } else { $('lgST').textContent = '–'; }
+    }
+    set('lgR', bar.rsi!=null ? bar.rsi.toFixed(1) : '–');
+    set('lgMACD', bar.macd!=null ? bar.macd.toFixed(2) : '–');
+    set('lgSK', bar.stoch_k!=null ? bar.stoch_k.toFixed(1) : '–');
+    set('lgADX', bar.adx_bar!=null ? bar.adx_bar.toFixed(1) : '–');
+  }
+
+  // Seed legend with last bar
+  const lastBar = ohlc[ohlc.length-1];
+  if(lastBar) setTimeout(()=>updateLegend(lastBar), 0);
+
+  // TV-style time-range pills (bottom-right of price chart)
+  const rangeEl = document.createElement('div');
+  rangeEl.className = 'tv-range';
+  // bars-per-day estimate for sizing the visible window
+  const barsPerDay = {'5m':75,'10m':38,'15m':25,'30m':13,'1h':7,'4h':2,'1d':1,'1w':1/5,'1mo':1/22}[interval] || 1;
+  // For intraday, ranges in trading days. For daily+, ranges in calendar days mapped to bars.
+  const ranges = isIntraday
+    ? [['1D',1],['5D',5],['1M',22],['3M',66],['ALL',null]]
+    : [['1M',22],['3M',66],['6M',132],['YTD','ytd'],['1Y',252],['2Y',504],['ALL',null]];
+  const total = ohlc.length;
+  ranges.forEach(([label, days]) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.dataset.range = label;
+    b.onclick = () => {
+      try {
+        rangeEl.querySelectorAll('button').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        if(days === null) { pChart.timeScale().fitContent(); return; }
+        let bars;
+        if(days === 'ytd') {
+          const nowYear = new Date().getFullYear();
+          let idx = 0;
+          for(let i=ohlc.length-1;i>=0;i--){
+            const t = ohlc[i].time;
+            const yr = (typeof t==='number') ? new Date(t*1000).getFullYear() : new Date(t).getFullYear();
+            if(yr < nowYear) { idx = i+1; break; }
+          }
+          bars = ohlc.length - idx;
+        } else {
+          bars = Math.max(20, Math.round(days * barsPerDay));
+        }
+        const to = total - 1 + 8;  // include rightOffset padding
+        const from = Math.max(0, total - bars);
+        pChart.timeScale().setVisibleLogicalRange({ from, to });
+      } catch(e) { console.error('range error', e); }
+    };
+    rangeEl.appendChild(b);
+  });
+  pDiv.appendChild(rangeEl);
+  // default selection
+  const defaultRange = isIntraday ? '5D' : (interval==='1d' ? '6M' : 'ALL');
+  const defBtn = rangeEl.querySelector(`button[data-range="${defaultRange}"]`);
+  if(defBtn) defBtn.classList.add('active');
+
+  // TradingView default candle palette
+  const TV_UP   = '#26a69a';
+  const TV_DOWN = '#ef5350';
   const candleSeries = pChart.addCandlestickSeries({
-    upColor:'#3fb950', downColor:'#f85149',
-    borderUpColor:'#3fb950', borderDownColor:'#f85149',
-    wickUpColor:'#3fb950', wickDownColor:'#f85149',
+    upColor:TV_UP, downColor:TV_DOWN,
+    borderUpColor:TV_UP, borderDownColor:TV_DOWN,
+    wickUpColor:TV_UP, wickDownColor:TV_DOWN,
+    priceLineColor:'rgba(255,255,255,.4)', priceLineWidth:1, priceLineStyle:LightweightCharts.LineStyle.Dotted,
   });
 
   const candleData = ohlc.filter(c=>c.time&&c.open&&c.high&&c.low&&c.close)
     .map(c=>({time:c.time, open:c.open, high:c.high, low:c.low, close:c.close}));
   candleSeries.setData(candleData);
 
-  // Volume
-  const volSeries = pChart.addHistogramSeries({
-    color:'rgba(88,166,255,0.2)', priceFormat:{type:'volume'},
-    priceScaleId:'vol',
-  });
-  pChart.priceScale('vol').applyOptions({scaleMargins:{top:.82,bottom:0}});
-  volSeries.setData(ohlc.filter(c=>c.time&&c.volume).map(c=>({
-    time:c.time, value:c.volume,
-    color:c.close>=c.open?'rgba(63,185,80,.25)':'rgba(248,81,73,.25)'
-  })));
+  // Volume (optional)
+  if(indicators.vol) {
+    const volSeries = pChart.addHistogramSeries({
+      color:'rgba(88,166,255,0.2)', priceFormat:{type:'volume'},
+      priceScaleId:'vol',
+    });
+    pChart.priceScale('vol').applyOptions({scaleMargins:{top:.82,bottom:0}});
+    volSeries.setData(ohlc.filter(c=>c.time&&c.volume).map(c=>({
+      time:c.time, value:c.volume,
+      color:c.close>=c.open?'rgba(38,166,154,.35)':'rgba(239,83,80,.35)'
+    })));
+  }
 
-  // BB — always visible; brighter in U mode
-  {
-    const bbOpts={lineWidth:1,lineStyle:LightweightCharts.LineStyle.Dashed,lastValueVisible:false,priceLineVisible:false};
-    const bbAlpha = showU ? '0.6' : '0.35';
-    const bbU=pChart.addLineSeries({...bbOpts,color:`rgba(88,166,255,${bbAlpha})`});
-    const bbL=pChart.addLineSeries({...bbOpts,color:`rgba(88,166,255,${bbAlpha})`});
-    const bbM=pChart.addLineSeries({...bbOpts,color:'rgba(88,166,255,0.15)',lineStyle:LightweightCharts.LineStyle.Dotted});
+  // BB (optional)
+  if(indicators.bb) {
+    const bbOpts={lineWidth:1,lineStyle:LightweightCharts.LineStyle.Solid,lastValueVisible:false,priceLineVisible:false};
+    const bbU=pChart.addLineSeries({...bbOpts,color:'rgba(41,98,255,0.55)'});
+    const bbL=pChart.addLineSeries({...bbOpts,color:'rgba(41,98,255,0.55)'});
+    const bbM=pChart.addLineSeries({...bbOpts,color:'rgba(41,98,255,0.20)',lineStyle:LightweightCharts.LineStyle.Dashed});
     bbU.setData(ohlc.filter(c=>c.time&&c.bb_upper).map(c=>({time:c.time,value:c.bb_upper})));
     bbL.setData(ohlc.filter(c=>c.time&&c.bb_lower).map(c=>({time:c.time,value:c.bb_lower})));
     bbM.setData(ohlc.filter(c=>c.time&&c.bb_mid).map(c=>({time:c.time,value:c.bb_mid})));
   }
 
-  // EMA5 + EMA50
-  {
-    const ema5s=pChart.addLineSeries({color:'#e3b341',lineWidth:1.5,lastValueVisible:false,priceLineVisible:false});
+  // EMA5 (optional) – TV orange
+  if(indicators.ema5) {
+    const ema5s=pChart.addLineSeries({color:'#f7a800',lineWidth:1,lastValueVisible:false,priceLineVisible:false});
     ema5s.setData(ohlc.filter(c=>c.time&&c.ema5).map(c=>({time:c.time,value:c.ema5})));
-    const ema50s=pChart.addLineSeries({color:'#e3a21a',lineWidth:2,lastValueVisible:false,priceLineVisible:false});
+  }
+  // EMA50 (optional) – TV blue
+  if(indicators.ema50) {
+    const ema50s=pChart.addLineSeries({color:'#2962ff',lineWidth:1,lastValueVisible:false,priceLineVisible:false});
     ema50s.setData(ohlc.filter(c=>c.time&&c.ema50).map(c=>({time:c.time,value:c.ema50})));
   }
 
-  // Supertrend — green line when bullish, red when bearish
-  {
+  // Supertrend (optional)
+  if(indicators.st) {
     const stOpts={lineWidth:2,lastValueVisible:false,priceLineVisible:false,lineStyle:LightweightCharts.LineStyle.Solid};
-    const stBullS=pChart.addLineSeries({...stOpts,color:'rgba(63,185,80,.7)'});
-    const stBearS=pChart.addLineSeries({...stOpts,color:'rgba(248,81,73,.7)'});
+    const stBullS=pChart.addLineSeries({...stOpts,color:'rgba(38,166,154,.85)'});
+    const stBearS=pChart.addLineSeries({...stOpts,color:'rgba(239,83,80,.85)'});
     const stBullData=ohlc.filter(c=>c.time&&c.st!=null&&c.st_dir===1).map(c=>({time:c.time,value:c.st}));
     const stBearData=ohlc.filter(c=>c.time&&c.st!=null&&c.st_dir===-1).map(c=>({time:c.time,value:c.st}));
     if(stBullData.length) stBullS.setData(stBullData);
     if(stBearData.length) stBearS.setData(stBearData);
   }
 
-  // EMA crossover arrows (only meaningful on daily+)
-  if(!isIntraday) {
-    const markers=[];
+  // Shared marker list — filled by EMA crossovers + divergences, applied once below
+  const chartMarkers=[];
+
+  // EMA crossover arrows (only when both EMAs enabled, daily+)
+  if(!isIntraday && indicators.ema5 && indicators.ema50) {
     for(let i=1;i<ohlc.length;i++){
       const prev=ohlc[i-1], cur=ohlc[i];
       if(!prev.ema5||!prev.ema50||!cur.ema5||!cur.ema50) continue;
       if(prev.ema5<=prev.ema50 && cur.ema5>cur.ema50)
-        markers.push({time:cur.time,position:'belowBar',color:'#3fb950',shape:'arrowUp',text:''});
+        chartMarkers.push({time:cur.time,position:'belowBar',color:TV_UP,shape:'arrowUp',text:''});
       else if(prev.ema5>=prev.ema50 && cur.ema5<cur.ema50)
-        markers.push({time:cur.time,position:'aboveBar',color:'#f85149',shape:'arrowDown',text:''});
+        chartMarkers.push({time:cur.time,position:'aboveBar',color:TV_DOWN,shape:'arrowDown',text:''});
     }
-    if(markers.length) candleSeries.setMarkers(markers);
   }
 
   // ── Trendlines — only on daily/weekly/monthly views
@@ -1437,77 +1884,144 @@ function buildLightweightChart(d, interval, ohlc) {
   // ── Indicator panel: U=DMI, S=MACD+Stochastic ──────────────────────────────
   const subOpts={
     ...chartOpts, autoSize:true,
-    rightPriceScale:{borderColor:'#30363d', scaleMargins:{top:.08,bottom:.08}},
-    timeScale:{borderColor:'#30363d', visible:false},
+    rightPriceScale:{borderColor:chartBorder, scaleMargins:{top:.12,bottom:.12}},
+    // inherit the price chart's spacing/offset so logical ranges map 1:1,
+    // and lock direct zoom/pan — panes follow the price chart instead
+    timeScale:{...chartOpts.timeScale, borderColor:chartBorder, visible:false},
+    handleScroll:false, handleScale:false,
+    watermark:{visible:false},
+    crosshair:{mode: LightweightCharts.CrosshairMode.Magnet,
+      vertLine:{width:1, color:'rgba(150,150,150,.5)', labelVisible:false},
+      horzLine:{width:1, color:'rgba(150,150,150,.5)', labelBackgroundColor:'#2962ff'}},
   };
 
-  if(showU) {
-    // DMI chart (+DI / -DI / ADX)
-    const dChart=LightweightCharts.createChart(iDiv, subOpts);
-    chartInstances.push(dChart);
-    const pdiS=dChart.addLineSeries({color:'#3fb950',lineWidth:1.5,lastValueVisible:true,priceLineVisible:false});
-    const ndiS=dChart.addLineSeries({color:'#f85149',lineWidth:1.5,lastValueVisible:true,priceLineVisible:false});
-    const adxS=dChart.addLineSeries({color:'#e3b341',lineWidth:1.5,lastValueVisible:true,priceLineVisible:false});
-    pdiS.setData(ohlc.filter(c=>c.time&&c.plus_di!=null).map(c=>({time:c.time,value:c.plus_di})));
-    ndiS.setData(ohlc.filter(c=>c.time&&c.minus_di!=null).map(c=>({time:c.time,value:c.minus_di})));
-    adxS.setData(ohlc.filter(c=>c.time&&c.adx_bar!=null).map(c=>({time:c.time,value:c.adx_bar})));
+  // Map a per-candle field to series data, padding warm-up nulls with
+  // whitespace points so every pane shares the price chart's logical index
+  // space (required for zoom/pan sync). Extra props (e.g. color) via fn.
+  const paneData = (field, extra) => ohlc.filter(c=>c.time).map(c =>
+    c[field]!=null ? {time:c.time, value:c[field], ...(extra?extra(c):{})} : {time:c.time});
+
+  // Lower-panel renderers — each returns its anchor series for crosshair sync
+  function renderDMI(host){
+    const c=LightweightCharts.createChart(host, subOpts);
+    chartInstances.push(c);
+    const pdi=c.addLineSeries({color:TV_UP,lineWidth:1.5,lastValueVisible:true,priceLineVisible:false,title:'+DI'});
+    const ndi=c.addLineSeries({color:TV_DOWN,lineWidth:1.5,lastValueVisible:true,priceLineVisible:false,title:'-DI'});
+    const adx=c.addLineSeries({color:'#e3b341',lineWidth:1.5,lastValueVisible:true,priceLineVisible:false,title:'ADX'});
+    pdi.setData(paneData('plus_di'));
+    ndi.setData(paneData('minus_di'));
+    adx.setData(paneData('adx_bar'));
     const t0=ohlc[0]?.time, tN=ohlc[ohlc.length-1]?.time;
-    if(t0&&tN) dChart.addLineSeries({color:'rgba(255,255,255,.12)',lineWidth:1,lineStyle:LightweightCharts.LineStyle.Dotted,lastValueVisible:false,priceLineVisible:false}).setData([{time:t0,value:25},{time:tN,value:25}]);
-    dChart.timeScale().fitContent();
-    pChart.subscribeCrosshairMove(p=>{if(p.time)dChart.setCrosshairPosition(p.seriesData.values().next().value?.value||0,p.time,pdiS);});
+    if(t0&&tN) c.addLineSeries({color:'rgba(255,255,255,.12)',lineWidth:1,lineStyle:LightweightCharts.LineStyle.Dotted,lastValueVisible:false,priceLineVisible:false}).setData([{time:t0,value:25},{time:tN,value:25}]);
+    c.timeScale().fitContent();
+    return {chart:c, anchor:pdi};
   }
-
-  if(showS) {
-    // MACD chart
-    const mChart=LightweightCharts.createChart(iDiv, subOpts);
-    chartInstances.push(mChart);
-    const macdLine=mChart.addLineSeries({color:'#58a6ff',lineWidth:1.5,lastValueVisible:true,priceLineVisible:false});
-    const sigLine=mChart.addLineSeries({color:'#f97316',lineWidth:1,lastValueVisible:true,priceLineVisible:false});
-    const histS=mChart.addHistogramSeries({lastValueVisible:false,priceLineVisible:false,priceScaleId:'right'});
-    macdLine.setData(ohlc.filter(c=>c.time&&c.macd!=null).map(c=>({time:c.time,value:c.macd})));
-    sigLine.setData(ohlc.filter(c=>c.time&&c.macd_sig!=null).map(c=>({time:c.time,value:c.macd_sig})));
-    histS.setData(ohlc.filter(c=>c.time&&c.macd_hist!=null).map(c=>({time:c.time,value:c.macd_hist,color:c.macd_hist>=0?'rgba(63,185,80,.5)':'rgba(248,81,73,.5)'})));
-    mChart.timeScale().fitContent();
-    pChart.subscribeCrosshairMove(p=>{if(p.time)mChart.setCrosshairPosition(p.seriesData.values().next().value?.value||0,p.time,macdLine);});
-
-    // Stochastic chart
-    const stChart=LightweightCharts.createChart(i2Div, subOpts);
-    chartInstances.push(stChart);
-    const kLine=stChart.addLineSeries({color:'#58a6ff',lineWidth:1.5,lastValueVisible:true,priceLineVisible:false});
-    const dLine=stChart.addLineSeries({color:'#f97316',lineWidth:1,lastValueVisible:true,priceLineVisible:false});
-    kLine.setData(ohlc.filter(c=>c.time&&c.stoch_k!=null).map(c=>({time:c.time,value:c.stoch_k})));
-    dLine.setData(ohlc.filter(c=>c.time&&c.stoch_d!=null).map(c=>({time:c.time,value:c.stoch_d})));
+  function renderMACD(host){
+    const c=LightweightCharts.createChart(host, subOpts);
+    chartInstances.push(c);
+    const macdLine=c.addLineSeries({color:'#58a6ff',lineWidth:1.5,lastValueVisible:true,priceLineVisible:false,title:'MACD'});
+    const sigLine=c.addLineSeries({color:'#f97316',lineWidth:1,lastValueVisible:true,priceLineVisible:false,title:'Signal'});
+    const histS=c.addHistogramSeries({lastValueVisible:false,priceLineVisible:false,priceScaleId:'right'});
+    macdLine.setData(paneData('macd'));
+    sigLine.setData(paneData('macd_sig'));
+    histS.setData(paneData('macd_hist', c=>({color:c.macd_hist>=0?'rgba(38,166,154,.55)':'rgba(239,83,80,.55)'})));
+    c.timeScale().fitContent();
+    return {chart:c, anchor:macdLine};
+  }
+  function renderStoch(host){
+    const c=LightweightCharts.createChart(host, subOpts);
+    chartInstances.push(c);
+    const kLine=c.addLineSeries({color:'#58a6ff',lineWidth:1.5,lastValueVisible:true,priceLineVisible:false,title:'%K'});
+    const dLine=c.addLineSeries({color:'#f97316',lineWidth:1,lastValueVisible:true,priceLineVisible:false,title:'%D'});
+    kLine.setData(paneData('stoch_k'));
+    dLine.setData(paneData('stoch_d'));
     const t0=ohlc[0]?.time, tN=ohlc[ohlc.length-1]?.time;
     const stOpt={lineWidth:1,lastValueVisible:false,priceLineVisible:false,lineStyle:LightweightCharts.LineStyle.Dashed};
     if(t0&&tN){
-      stChart.addLineSeries({...stOpt,color:'rgba(248,81,73,.4)'}).setData([{time:t0,value:80},{time:tN,value:80}]);
-      stChart.addLineSeries({...stOpt,color:'rgba(188,140,255,.4)'}).setData([{time:t0,value:20},{time:tN,value:20}]);
+      c.addLineSeries({...stOpt,color:'rgba(239,83,80,.4)'}).setData([{time:t0,value:80},{time:tN,value:80}]);
+      c.addLineSeries({...stOpt,color:'rgba(188,140,255,.4)'}).setData([{time:t0,value:20},{time:tN,value:20}]);
     }
-    stChart.timeScale().fitContent();
-    pChart.subscribeCrosshairMove(p=>{if(p.time)stChart.setCrosshairPosition(p.seriesData.values().next().value?.value||0,p.time,kLine);});
+    c.timeScale().fitContent();
+    return {chart:c, anchor:kLine};
+  }
+  const RENDERERS = { dmi:renderDMI, macd:renderMACD, stoch:renderStoch };
+
+  const subAnchors = [];
+  if(slot1) subAnchors.push(RENDERERS[slot1](iDiv));
+  if(slot2) subAnchors.push(RENDERERS[slot2](i2Div));
+
+  // ── RSI overlay — drawn inside the price chart in its own bottom band, so it
+  //    shares the price chart's time scale and is always pixel-aligned ─────────
+  let rsiSeries = null;
+  if(indicators.rsi) {
+    // shrink the candle area so the RSI band (64–80%) and volume (82–100%) fit below
+    pChart.priceScale('right').applyOptions({scaleMargins:{top:.08,bottom:.38}});
+    rsiSeries = pChart.addLineSeries({color:'#bc8cff',lineWidth:1.5,priceScaleId:'rsi',
+      lastValueVisible:false,priceLineVisible:false,crosshairMarkerVisible:true,title:'RSI'});
+    pChart.priceScale('rsi').applyOptions({scaleMargins:{top:.64,bottom:.20},visible:false});
+    rsiSeries.setData(paneData('rsi'));
+    const times=ohlc.filter(c=>c.time).map(c=>c.time);
+    if(times.length){
+      const t0=times[0], tN=times[times.length-1];
+      const lineOpt={priceScaleId:'rsi',lineWidth:1,lastValueVisible:false,priceLineVisible:false,
+        lineStyle:LightweightCharts.LineStyle.Dashed,crosshairMarkerVisible:false};
+      pChart.addLineSeries({...lineOpt,color:'rgba(239,83,80,.35)'}).setData([{time:t0,value:rsiOB},{time:tN,value:rsiOB}]);
+      pChart.addLineSeries({...lineOpt,color:'rgba(38,166,154,.35)'}).setData([{time:t0,value:rsiOS},{time:tN,value:rsiOS}]);
+    }
   }
 
-  // ── RSI chart ────────────────────────────────────────────────────────────────
-  const rChart = LightweightCharts.createChart(rDiv, subOpts);
-  chartInstances.push(rChart);
-
-  const rsiSeries=rChart.addLineSeries({color:'#58a6ff',lineWidth:1.5,lastValueVisible:true,priceLineVisible:false});
-  rsiSeries.setData(ohlc.filter(c=>c.time&&c.rsi!=null).map(c=>({time:c.time,value:c.rsi})));
-
-  const times=ohlc.filter(c=>c.time).map(c=>c.time);
-  if(times.length){
-    const t0=times[0], tN=times[times.length-1];
-    const lineOpt={lineWidth:1,lastValueVisible:false,priceLineVisible:false,lineStyle:LightweightCharts.LineStyle.Dashed};
-    rChart.addLineSeries({...lineOpt,color:'rgba(248,81,73,.4)'}).setData([{time:t0,value:rsiOB},{time:tN,value:rsiOB}]);
-    rChart.addLineSeries({...lineOpt,color:'rgba(188,140,255,.4)'}).setData([{time:t0,value:rsiOS},{time:tN,value:rsiOS}]);
-    rChart.addLineSeries({...lineOpt,color:'rgba(255,255,255,.1)',lineStyle:LightweightCharts.LineStyle.Dotted}).setData([{time:t0,value:50},{time:tN,value:50}]);
+  // ── RSI Divergence lines + markers (1D and 4H only) ─────────────────────────
+  if(indicators.div && (interval==='1d' || interval==='4h')) {
+    const divs = interval==='1d'
+      ? (d.divergences || (d._divc&&d._divc['1d']) || [])
+      : ((d._divc&&d._divc['4h']) || d.divergences_4h || []);
+    const divOpt={lineWidth:2,lastValueVisible:false,priceLineVisible:false,crosshairMarkerVisible:false};
+    divs.forEach(dv=>{
+      if(!displayedTimes.has(dv.t1) || !displayedTimes.has(dv.t2)) return;
+      const bear = dv.type==='bearish';
+      const color = bear ? TV_DOWN : TV_UP;
+      pChart.addLineSeries({...divOpt,color}).setData([{time:dv.t1,value:dv.p1},{time:dv.t2,value:dv.p2}]);
+      if(rsiSeries)
+        pChart.addLineSeries({...divOpt,color,priceScaleId:'rsi',lineStyle:LightweightCharts.LineStyle.Dashed}).setData([{time:dv.t1,value:dv.r1},{time:dv.t2,value:dv.r2}]);
+      chartMarkers.push({time:dv.t2, position: bear?'aboveBar':'belowBar', color,
+        shape: bear?'arrowDown':'arrowUp', text: bear?'Bear Div':'Bull Div'});
+    });
   }
-  rChart.timeScale().fitContent();
+  if(chartMarkers.length){
+    chartMarkers.sort((a,b)=>a.time-b.time);
+    candleSeries.setMarkers(chartMarkers);
+  }
 
-  // Sync crosshair from price chart → all sub-charts
+  // Sync crosshair from price chart → all sub-charts + update legend
+  const ohlcByTime = new Map(ohlc.map(c=>[c.time, c]));
   pChart.subscribeCrosshairMove(p=>{
-    if(p.time) rChart.setCrosshairPosition(p.seriesData.values().next().value?.value||0,p.time,rsiSeries);
+    if(p.time) {
+      subAnchors.forEach(s => { try { s.chart.setCrosshairPosition(0, p.time, s.anchor); } catch(e){} });
+      const bar = ohlcByTime.get(p.time);
+      if(bar) updateLegend(bar);
+    } else {
+      const lb = ohlc[ohlc.length-1];
+      if(lb) updateLegend(lb);
+    }
   });
+
+  // Zoom/pan sync: price chart drives all lower panes (one-way — panes have
+  // scroll/scale locked, so no feedback loop is possible)
+  const paneCharts = subAnchors.map(s=>s.chart);
+  if(paneCharts.length) {
+    const nearlyEq=(a,b)=>a&&b&&Math.abs(a.from-b.from)<.5&&Math.abs(a.to-b.to)<.5;
+    const follow = range => {
+      if(!range) return;
+      paneCharts.forEach(c => {
+        try {
+          if(!nearlyEq(c.timeScale().getVisibleLogicalRange(), range))
+            c.timeScale().setVisibleLogicalRange(range);
+        } catch(e){}
+      });
+    };
+    pChart.timeScale().subscribeVisibleLogicalRangeChange(follow);
+    follow(pChart.timeScale().getVisibleLogicalRange());
+  }
 }
 
 // ── Overlay toggles (Pivot, Fib, VWAP) ────────────────────────────────────────
@@ -2158,6 +2672,72 @@ function addToWatchlistManual() {
   saveWatchlist();
   renderWatchlist();
   showToast(added ? '★ Added: ' + syms.slice(0,3).join(', ') : 'Already in watchlist');
+}
+
+// ── TradingView-style in-chart symbol search ────────────────────────────────
+let _tvSearchIdx = -1;
+function tvSearchInput(inp) {
+  const dd = document.getElementById('tvSearchDrop');
+  if(!dd) return;
+  const q = (inp.value||'').trim().toUpperCase();
+  const pool = _symbolPool.length ? _symbolPool : allResults;
+  if(!pool.length) { dd.classList.remove('show'); return; }
+  let matches;
+  if(!q) {
+    // Show recent + top of allResults when input is empty/focused
+    matches = (allResults.slice(0, 8)).map(r => ({symbol:r.symbol, name:r.name||'', sector:r.sector||''}));
+  } else {
+    matches = pool.filter(r =>
+      r.symbol.startsWith(q) || (r.name||'').toUpperCase().includes(q)
+    ).slice(0, 12);
+  }
+  if(!matches.length) { dd.classList.remove('show'); return; }
+  _tvSearchIdx = -1;
+  dd.innerHTML = matches.map((r,i) =>
+    `<div class="tv-search-item" data-sym="${r.symbol}" data-i="${i}"
+       onmousedown="tvSearchPick('${r.symbol}')"
+       onmouseenter="tvSearchHover(${i})">
+       <span class="ts-sym">${r.symbol}</span>
+       <span class="ts-sec">${r.sector||r.name||''}</span>
+     </div>`
+  ).join('');
+  dd.classList.add('show');
+}
+function tvSearchHover(i) {
+  _tvSearchIdx = i;
+  document.querySelectorAll('#tvSearchDrop .tv-search-item').forEach((el,j) =>
+    el.classList.toggle('sel', j===i));
+}
+function tvSearchKey(e) {
+  const dd = document.getElementById('tvSearchDrop');
+  const items = dd.querySelectorAll('.tv-search-item');
+  if(e.key === 'ArrowDown') {
+    e.preventDefault();
+    _tvSearchIdx = Math.min(_tvSearchIdx+1, items.length-1);
+    items.forEach((el,j) => el.classList.toggle('sel', j===_tvSearchIdx));
+  } else if(e.key === 'ArrowUp') {
+    e.preventDefault();
+    _tvSearchIdx = Math.max(_tvSearchIdx-1, 0);
+    items.forEach((el,j) => el.classList.toggle('sel', j===_tvSearchIdx));
+  } else if(e.key === 'Enter') {
+    e.preventDefault();
+    if(_tvSearchIdx >= 0 && items[_tvSearchIdx]) {
+      tvSearchPick(items[_tvSearchIdx].dataset.sym);
+    } else {
+      const raw = (e.target.value||'').trim().toUpperCase();
+      if(raw) tvSearchPick(raw);
+    }
+  } else if(e.key === 'Escape') {
+    dd.classList.remove('show');
+    e.target.blur();
+  }
+}
+function tvSearchPick(sym) {
+  const dd = document.getElementById('tvSearchDrop');
+  if(dd) dd.classList.remove('show');
+  const inp = document.getElementById('tvSearchInp');
+  if(inp) { inp.value = ''; inp.blur(); }
+  openDetail(sym);
 }
 
 function clearWatchlist() {

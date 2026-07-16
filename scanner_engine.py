@@ -54,6 +54,73 @@ def _vwap(df: pd.DataFrame) -> pd.Series:
     return (tp * df['volume']).cumsum() / (df['volume'].cumsum() + 1e-9)
 
 
+# ── RSI divergence ─────────────────────────────────────────────────────────────
+
+def _pivot_idxs(vals: np.ndarray, left: int, right: int, kind: str) -> list[int]:
+    """Indices of confirmed swing pivots (strict extreme within the window)."""
+    out = []
+    for i in range(left, len(vals) - right):
+        w = vals[i - left: i + right + 1]
+        v = vals[i]
+        if np.isnan(v):
+            continue
+        if kind == "high":
+            if v >= np.nanmax(w) and (w == np.nanmax(w)).sum() == 1:
+                out.append(i)
+        else:
+            if v <= np.nanmin(w) and (w == np.nanmin(w)).sum() == 1:
+                out.append(i)
+    return out
+
+
+def detect_rsi_divergence(df: pd.DataFrame, rsi_s: pd.Series,
+                          lookback: int = 120, left: int = 3, right: int = 3,
+                          min_span: int = 5, max_span: int = 60,
+                          min_rsi_delta: float = 1.5, max_out: int = 6) -> list[dict]:
+    """Regular price/RSI divergences on confirmed swing pivots.
+
+    bearish: price higher high while RSI lower high (first peak from strength, rsi1 >= 55)
+    bullish: price lower low  while RSI higher low  (first trough from weakness, rsi1 <= 45)
+
+    Both pivots of a pair must sit within the trailing `lookback` bars and be
+    `min_span`..`max_span` bars apart. Returns newest-last, capped at `max_out`.
+    """
+    n = len(df)
+    if n < left + right + min_span + 2:
+        return []
+    high = df['high'].to_numpy(dtype=float)
+    low  = df['low'].to_numpy(dtype=float)
+    rsi  = rsi_s.to_numpy(dtype=float)
+    times = [int(pd.Timestamp(idx).timestamp()) for idx in df.index]
+    start = max(0, n - lookback)
+
+    found = []
+    for kind in ("high", "low"):
+        vals = high if kind == "high" else low
+        piv = [i for i in _pivot_idxs(vals, left, right, kind) if i >= start and not np.isnan(rsi[i])]
+        for a, b in zip(piv, piv[1:]):
+            span = b - a
+            if span < min_span or span > max_span:
+                continue
+            p1, p2, r1, r2 = vals[a], vals[b], rsi[a], rsi[b]
+            if kind == "high" and p2 > p1 and r1 - r2 >= min_rsi_delta and r1 >= 55:
+                dtype = "bearish"
+            elif kind == "low" and p2 < p1 and r2 - r1 >= min_rsi_delta and r1 <= 45:
+                dtype = "bullish"
+            else:
+                continue
+            found.append({
+                "type": dtype,
+                "t1": times[a], "t2": times[b],
+                "p1": _f(p1),   "p2": _f(p2),
+                "r1": _f(r1),   "r2": _f(r2),
+                # bar where the 2nd pivot is confirmed (pivot + right window)
+                "confirmed_t": times[min(b + right, n - 1)],
+            })
+    found.sort(key=lambda x: x["t2"])
+    return found[-max_out:]
+
+
 def _pivot_points(ph: float, pl: float, pc: float) -> dict:
     pp = (ph + pl + pc) / 3
     return {
@@ -334,6 +401,7 @@ def analyze_symbol(symbol: str, include_chart: bool = True) -> dict | None:
                     "st_dir":    int(stdir_all[pos]),
                 })
             row["ohlc"] = ohlc
+            row["divergences"] = detect_rsi_divergence(df.tail(n1y), rsi_all.tail(n1y))
 
             # 4H data
             try:
@@ -344,6 +412,7 @@ def analyze_symbol(symbol: str, include_chart: bool = True) -> dict | None:
                         {'open':'first','high':'max','low':'min','close':'last','volume':'sum'}
                     ).dropna()
                     rsi4h = _rsi(df4h['close'])
+                    row["divergences_4h"] = detect_rsi_divergence(df4h, rsi4h)
                     row["ohlc_4h"] = [
                         {"time": int(pd.Timestamp(idx).timestamp()), "date": str(idx)[:16],
                          "open":_f(r['open']),"high":_f(r['high']),"low":_f(r['low']),
@@ -408,7 +477,10 @@ def fetch_chart_data(symbol: str, interval: str) -> dict | None:
             if vwap_s is not None:
                 candle["vwap"] = _f(vwap_s.iloc[i])
             ohlc.append(candle)
-        return {"symbol": symbol, "interval": interval, "ohlc": ohlc}
+        out = {"symbol": symbol, "interval": interval, "ohlc": ohlc}
+        if interval in ("1d", "4h"):
+            out["divergences"] = detect_rsi_divergence(df, rsi_s)
+        return out
     except Exception as e:
         logger.warning(f"fetch_chart_data failed [{symbol}/{interval}]: {e}")
         return None

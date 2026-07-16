@@ -7,9 +7,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy app files
-COPY app.py kite_data.py scanner_engine.py trendline_engine.py universe.py momentum_scanner.py ./
+COPY app.py kite_data.py scanner_engine.py trendline_engine.py universe.py momentum_scanner.py pattern_scanner.py alerts.py ./
 COPY templates/ templates/
-COPY static/ static/
 
 EXPOSE 8888
 
