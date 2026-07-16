@@ -1,16 +1,17 @@
 @echo off
-REM ASTA Stock Scanner — run.bat (Windows)
+REM ASTA Stock Scanner - run.bat (Windows, no Docker needed)
 cd /d "%~dp0"
 
 echo.
-echo  ╔══════════════════════════════╗
-echo  ║   ASTA Stock Scanner v1.0   ║
-echo  ╚══════════════════════════════╝
+echo  ==============================
+echo    ASTA Stock Scanner v1.0
+echo  ==============================
 echo.
 
 where python >nul 2>&1
 if errorlevel 1 (
     echo  ERROR: Python not found. Install from https://python.org
+    echo  IMPORTANT: tick "Add python.exe to PATH" during install.
     pause
     exit /b 1
 )
@@ -32,6 +33,6 @@ echo  Starting scanner on http://localhost:8888
 echo  Open your browser and go to http://localhost:8888
 echo  Press Ctrl+C to stop
 echo.
-
+start http://localhost:8888
 python -m uvicorn app:app --host 0.0.0.0 --port 8888
 pause

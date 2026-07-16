@@ -31,4 +31,22 @@ Double-click **`STOP.bat`**
 
 ---
 
-**Note:** Uses Yahoo Finance for market data (end-of-day). No login or API keys needed.
+## Alternative — run without Docker
+
+If you can't install Docker, install **Python 3.11+** from https://python.org
+(tick **"Add python.exe to PATH"** during install), then double-click **`run.bat`**.
+First run installs dependencies (1-2 minutes); the browser opens automatically.
+Stop with **Ctrl+C** in the black window.
+
+---
+
+## Features
+
+- Nifty 50/100/200/500 + Midcap scans with ASTA score, RSI, ADX, volume ratio
+- TradingView-style charts: 5m → monthly, EMA/BB/Supertrend/MACD/Stochastic/DMI
+- **RSI divergence detection** (daily + 4H) — drawn on the chart with Bull/Bear markers
+- RSI overlay band inside the price chart, always aligned with candles
+- Trendline detection, momentum scan, setups, MTF confluence, sector heatmap, FII/DII
+
+**Note:** Uses Yahoo Finance for market data (end-of-day). No login or API keys
+needed. Internet connection required.
