@@ -74,6 +74,25 @@ def _j(data) -> JSONResponse:
     return JSONResponse(content=json.loads(json.dumps(_clean(data), cls=_Enc)))
 
 
+@app.exception_handler(Exception)
+async def _unhandled_exception(request, exc):
+    """Return JSON for ANY unhandled error.
+
+    Without this, Starlette answers with the plain-text body "Internal Server
+    Error", and the frontend's response.json() then fails with the misleading
+    "Unexpected token 'I' ... is not valid JSON" — hiding the real cause. A
+    JSON body means the UI can surface the actual error text instead.
+    """
+    import logging as _log
+    _log.getLogger(__name__).error(
+        f"Unhandled error on {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"error": f"{type(exc).__name__}: {exc}",
+                 "path": request.url.path},
+    )
+
+
 # ── Routes ─────────────────────────────────────────────────────────────────────
 @app.get("/", response_class=HTMLResponse)
 async def root():
