@@ -1,4 +1,4 @@
-import json, time, os, numpy as np
+import json, math, time, os, numpy as np
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.responses import HTMLResponse, JSONResponse
 import asyncio
@@ -38,8 +38,40 @@ class _Enc(json.JSONEncoder):
         if isinstance(o, np.ndarray):    return o.tolist()
         return super().default(o)
 
+
+def _clean(o):
+    """Recursively convert numpy scalars to Python types and replace
+    non-finite floats (NaN, ±Inf) with None.
+
+    Indicators legitimately produce NaN — warm-up bars of RSI/MACD/ATR, a
+    missing P/E, a symbol yfinance returned short. Those must not abort the
+    whole response. A JSONEncoder subclass cannot fix this: the json module
+    serializes floats in C and never calls default() for them, so NaN survives
+    into the payload and Starlette's JSONResponse (which uses allow_nan=False)
+    raises "Out of range float values are not JSON compliant". The values have
+    to be replaced *before* serialization. null is the right wire value — JSON
+    has no NaN, and the UI already renders missing fields as "—".
+    """
+    if isinstance(o, float):
+        return o if math.isfinite(o) else None
+    if isinstance(o, np.floating):
+        v = float(o)
+        return v if math.isfinite(v) else None
+    if isinstance(o, np.integer):
+        return int(o)
+    if isinstance(o, np.bool_):
+        return bool(o)
+    if isinstance(o, np.ndarray):
+        return [_clean(x) for x in o.tolist()]
+    if isinstance(o, dict):
+        return {k: _clean(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple)):
+        return [_clean(x) for x in o]
+    return o
+
+
 def _j(data) -> JSONResponse:
-    return JSONResponse(content=json.loads(json.dumps(data, cls=_Enc)))
+    return JSONResponse(content=json.loads(json.dumps(_clean(data), cls=_Enc)))
 
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
