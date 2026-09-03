@@ -1,52 +1,47 @@
 # ASTA Scanner
 
-NSE stock scanner with trendline detection, multi-timeframe charts, and sector heatmap.
+NSE stock scanner — scores, trendlines, charts, sector heatmap. Runs on your own PC.
 
-## How to Run on Windows
+## Setup (one time)
 
-### Step 1 — Install Docker Desktop
-1. Go to **https://www.docker.com/products/docker-desktop**
-2. Click **Download for Windows**
-3. Run the installer — keep all default settings
-4. Restart your PC when prompted
-5. Launch Docker Desktop from the Start menu and wait for it to finish starting (whale icon in taskbar)
+**1.** Install Python: **https://www.python.org/downloads/**
+  → On the first installer screen, **tick "Add python.exe to PATH"**.
 
-> Requires Windows 10/11 (64-bit). If asked about WSL2, click Install.
+**2.** Double-click **`run.bat`**
 
-### Step 2 — Start the scanner
-Double-click **`START.bat`**
+That's it. The first run installs everything (2–3 min), then opens
+**http://localhost:8888** in your browser by itself.
 
-First launch downloads ~500MB (Python + libraries). Takes 3-5 minutes.
-After that, starts in seconds.
+## Every day after that
 
-### Step 3 — Open your browser
-Go to **http://localhost:8888**
-
-The browser should open automatically. If not, type the address above manually.
+Double-click **`run.bat`** → opens in a few seconds.
+To stop: close the black window.
 
 ---
 
-### To stop the scanner
-Double-click **`STOP.bat`**
+<details>
+<summary>If something goes wrong</summary>
 
----
+**"Python was not found"** — Python isn't installed, or "Add python.exe to PATH"
+wasn't ticked. Re-run the Python installer, tick that box, restart the PC.
 
-## Alternative — run without Docker
+**Windows SmartScreen warning** — click *More info* → *Run anyway*. It appears
+because the file arrived from a chat app, not because anything is wrong.
 
-If you can't install Docker, install **Python 3.11+** from https://python.org
-(tick **"Add python.exe to PATH"** during install), then double-click **`run.bat`**.
-First run installs dependencies (1-2 minutes); the browser opens automatically.
-Stop with **Ctrl+C** in the black window.
+**Page doesn't load** — wait for the black window to say `Ready`, then refresh.
 
----
+**Port already in use** — another copy is running. Close all black windows, retry.
 
-## Features
+</details>
 
-- Nifty 50/100/200/500 + Midcap scans with ASTA score, RSI, ADX, volume ratio
-- TradingView-style charts: 5m → monthly, EMA/BB/Supertrend/MACD/Stochastic/DMI
-- **RSI divergence detection** (daily + 4H) — drawn on the chart with Bull/Bear markers
-- RSI overlay band inside the price chart, always aligned with candles
-- Trendline detection, momentum scan, setups, MTF confluence, sector heatmap, FII/DII
+<details>
+<summary>What's inside</summary>
 
-**Note:** Uses Yahoo Finance for market data (end-of-day). No login or API keys
-needed. Internet connection required.
+- Nifty 50/100/200/500 + Midcap scans — ASTA score, RSI, ADX, volume ratio
+- TradingView-style charts, 5m → monthly, with EMA/BB/Supertrend/MACD/Stochastic/DMI
+- RSI divergence detection (daily + 4H), trendlines, momentum, setups, MTF
+  confluence, sector heatmap, FII/DII
+
+Data: Yahoo Finance (end-of-day). **No login, no API keys.** Needs internet.
+
+</details>
